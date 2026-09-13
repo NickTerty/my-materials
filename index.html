@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Course Materials & Notes</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- 頂部導覽列 -->
+  <header class="navbar">
+    <div class="navbar-container">
+      <div class="brand-section">
+        <a href="https://nickterty.vercel.app" class="back-home-link">&larr; 回個人主頁</a>
+        <h1 class="page-title">教材與筆記資料庫</h1>
+      </div>
+      <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="搜尋課程、章節、關鍵字..." onkeyup="filterContent()" />
+      </div>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="info-banner">
+      <span>說明：點擊「預覽」直接開啓PDF，點擊「下載」保存檔案。</span>
+      <div class="legend-group">
+        <span class="legend-item"><span class="dot dot-ta"></span>Teaching Assistant</span>
+        <span class="legend-item"><span class="dot dot-student"></span>Student</span>
+      </div>
+    </div>
+
+    <div class="columns-grid">
+      <!-- Teaching as TA -->
+      <section>
+        <div class="column-header">
+          <h2>教材 (Teaching as TA)</h2>
+          <span class="badge-ta">Teaching Assistant Hub</span>
+        </div>
+        <div id="ta-container"></div>
+      </section>
+
+      <!-- As Student -->
+      <section>
+        <div class="column-header">
+          <h2>修課筆記 (As Student)</h2>
+          <span class="badge-student">Student Notes</span>
+        </div>
+        <div id="student-container"></div>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <p>Course Materials & Notes • Hosted on GitHub Pages</p>
+  </footer>
+
+  <!-- 自動讀取 JSON 並渲染卡片的腳本 -->
+<script>
+  async function loadData() {
+    try {
+      const response = await fetch('./src/data/data.json');
+      const data = await response.json();
+
+      // 分別傳入 'ta' 與 'student' 類別
+      renderCards(data.ta, 'ta-container', 'ta');
+      renderCards(data.student, 'student-container', 'student');
+    } catch (err) {
+      console.error('無法讀取教材資料:', err);
+    }
+  }
+
+  function renderCards(courses, containerId, type) {
+    const container = document.getElementById(containerId);
+    // 依據 type 決定 class 是 badge-ta 還是 badge-student
+    const badgeClass = type === 'ta' ? 'badge-ta' : 'badge-student';
+
+    container.innerHTML = courses.map(course => `
+      <article class="course-card">
+        <div class="card-header">
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="${badgeClass}" style="font-size: 10px;">${course.status}</span>
+              <span class="card-title">${course.title}</span>
+            </div>
+            <div class="card-subtitle">${course.subtitle}</div>
+          </div>
+        </div>
+        <ul class="file-list">
+          ${course.files.map(file => `
+            <li class="file-item">
+              <div class="file-info">
+                <span class="tag-label">${file.tag}</span>
+                <span>${file.name}</span>
+              </div>
+              <div class="file-actions">
+                <a href="${file.url}" target="_blank" class="btn-preview">預覽</a>
+                <a href="${file.url}" download class="btn-download">下載</a>
+              </div>
+            </li>
+          `).join('')}
+        </ul>
+      </article>
+    `).join('');
+  }
+
+  function filterContent() {
+    const query = document.getElementById('searchInput').value.toLowerCase().trim();
+    const cards = document.querySelectorAll('.course-card');
+    cards.forEach(card => {
+      card.style.display = card.textContent.toLowerCase().includes(query) ? '' : 'none';
+    });
+  }
+
+  // 頁面載入時執行
+  loadData();
+</script>
+</body>
+</html>

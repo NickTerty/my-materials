@@ -1,0 +1,83 @@
+{
+  "ta": [
+    {
+      "title": "微積分(一)",
+      "subtitle": "Calculus(I) | 2026 Fall",
+      "status": "115-1",
+      "badge": "TA Resources",
+      "files": [
+        {
+          "tag": "W1",
+          "name": "第一次補救教學內容",
+          "url": "./src/materials/teaching/calculus_I/#"
+        }
+      ]
+    },
+    {
+      "title": "高等微積分(一)",
+      "subtitle": "Advanced Calculus(I) | Fall 2026",
+      "status": "115-1",
+      "badge": "TA Resources",
+      "files": [
+        {
+          "tag": "W1-1",
+          "name": "Logics",
+          "url": "./src/materials/teaching/advanced_cal_I/Logics.pdf"
+        },
+        {
+          "tag": "W1-2",
+          "name": "Section 1.2",
+          "url": ""
+        },
+        {
+          "tag": "HW",
+          "name": "Logics's HW",
+          "url": "./src/materials/teaching/advanced_cal_I/Homework_for_Introduction_to_Mathematics_Fall_2026_.pdf"
+        }
+      ]
+    }
+  ],
+  "student": [
+    {
+      "title": "常微分方程",
+      "subtitle": "Ordinary Differential Equations | Fall 2026 | 資工二",
+      "status": "115-1",
+      "badge": "Student Notes",
+      "files": [
+        {
+          "tag": "Notes",
+          "name": "Chapter 1",
+          "url": ""
+        },
+        {
+          "tag": "Notes",
+          "name": "Chapter 2",
+          "url": ""
+        }
+      ]
+    },
+    {
+      "title": "機率",
+      "subtitle": "Probability | Spring 2026 | 資工二",
+      "status": "114-2",
+      "badge": "Student Notes",
+      "files": [
+        {
+          "tag": "Notes",
+          "name": "Chapter 1~4",
+          "url": "./src/materials/course/prob/Probability_Lecture_Ch1_4.pdf"
+        },
+        {
+          "tag": "Notes",
+          "name": "Chapter 5",
+          "url": "./src/materials/course/prob/Probability_Lecture_Ch5.pdf"
+        },
+        {
+          "tag": "Notes",
+          "name": "Chapter 6",
+          "url": "./src/materials/course/prob/Probability_Lecture_Ch6.pdf"
+        }
+      ]
+    }
+  ]
+}
