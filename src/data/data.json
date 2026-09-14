@@ -1,4 +1,5 @@
 {
+  "lastUpdate": "2026.9.14",
   "ta": [
     {
       "title": "微積分(一)",
@@ -9,7 +10,8 @@
         {
           "tag": "W1",
           "name": "第一次補救教學內容",
-          "url": "./src/materials/teaching/calculus_I/#"
+          "url": "./src/materials/teaching/calculus_I/#",
+          "type": "file"
         }
       ]
     },
@@ -22,17 +24,20 @@
         {
           "tag": "W1-1",
           "name": "Logics",
-          "url": "./src/materials/teaching/advanced_cal_I/Logics.pdf"
+          "url": "./src/materials/teaching/advanced_cal_I/Logics.pdf",
+          "type": "file"
         },
         {
           "tag": "W1-2",
           "name": "Section 1.2",
-          "url": ""
+          "url": "",
+          "type": "file"
         },
         {
           "tag": "HW",
           "name": "Logics's HW",
-          "url": "./src/materials/teaching/advanced_cal_I/Homework_for_Introduction_to_Mathematics_Fall_2026_.pdf"
+          "url": "./src/materials/teaching/advanced_cal_I/Homework_for_Introduction_to_Mathematics_Fall_2026_.pdf",
+          "type": "file"
         }
       ]
     }
@@ -47,12 +52,20 @@
         {
           "tag": "Notes",
           "name": "Chapter 1",
-          "url": ""
+          "url": "",
+          "type": "file"
         },
         {
           "tag": "Notes",
           "name": "Chapter 2",
-          "url": ""
+          "url": "",
+          "type": "file"
+        },
+        {
+          "tag": "Test",
+          "name": "Test",
+          "url": "",
+          "type": "link"
         }
       ]
     },
@@ -65,17 +78,20 @@
         {
           "tag": "Notes",
           "name": "Chapter 1~4",
-          "url": "./src/materials/course/prob/Probability_Lecture_Ch1_4.pdf"
+          "url": "./src/materials/course/prob/Probability_Lecture_Ch1_4.pdf",
+          "type": "file"
         },
         {
           "tag": "Notes",
           "name": "Chapter 5",
-          "url": "./src/materials/course/prob/Probability_Lecture_Ch5.pdf"
+          "url": "./src/materials/course/prob/Probability_Lecture_Ch5.pdf",
+          "type": "file"
         },
         {
           "tag": "Notes",
           "name": "Chapter 6",
-          "url": "./src/materials/course/prob/Probability_Lecture_Ch6.pdf"
+          "url": "./src/materials/course/prob/Probability_Lecture_Ch6.pdf",
+          "type": "file"
         }
       ]
     }
