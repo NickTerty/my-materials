@@ -8,8 +8,8 @@
       "badge": "TA Resources",
       "files": [
         {
-          "tag": "W1",
-          "name": "第一次補救教學內容",
+          "tag": "W2",
+          "name": "Week 2 補救教學內容",
           "url": "./src/materials/teaching/calculus_I/#",
           "type": "file"
         }
@@ -22,13 +22,13 @@
       "badge": "TA Resources",
       "files": [
         {
-          "tag": "W1-1",
+          "tag": "W2-1",
           "name": "Logics",
           "url": "./src/materials/teaching/advanced_cal_I/Logics.pdf",
           "type": "file"
         },
         {
-          "tag": "W1-2",
+          "tag": "W2-2",
           "name": "Section 1.2",
           "url": "",
           "type": "file"
