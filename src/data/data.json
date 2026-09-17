@@ -1,5 +1,5 @@
 {
-  "lastUpdate": "2026.9.14",
+  "lastUpdate": "2026.9.17",
   "ta": [
     {
       "title": "微積分(一)",
@@ -8,9 +8,15 @@
       "badge": "TA Resources",
       "files": [
         {
+          "tag": "Link",
+          "name": "Desmos",
+          "url": "https://www.desmos.com/calculator?lang=zh-TW",
+          "type": "link"
+        },
+        {
           "tag": "W2",
-          "name": "Week 2 補救教學內容",
-          "url": "./src/materials/teaching/calculus_I/#",
+          "name": "Week 2 補救教學",
+          "url": "./src/materials/teaching/calculus_I/9_16.pdf",
           "type": "file"
         }
       ]
@@ -30,12 +36,12 @@
         {
           "tag": "W2-2",
           "name": "Section 1.2",
-          "url": "",
+          "url": "./src/materials/teaching/advanced_cal_I/9_17.pdf",
           "type": "file"
         },
         {
           "tag": "HW",
-          "name": "Logics's HW",
+          "name": "Logics's HW (純練習用，非老師指派作業)",
           "url": "./src/materials/teaching/advanced_cal_I/Homework_for_Introduction_to_Mathematics_Fall_2026_.pdf",
           "type": "file"
         }
@@ -60,12 +66,6 @@
           "name": "Chapter 2",
           "url": "",
           "type": "file"
-        },
-        {
-          "tag": "Test",
-          "name": "Test",
-          "url": "",
-          "type": "link"
         }
       ]
     },
