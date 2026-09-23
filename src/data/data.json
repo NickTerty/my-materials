@@ -1,5 +1,5 @@
 {
-  "lastUpdate": "2026.9.20",
+  "lastUpdate": "2026.9.23",
   "ta": [
     {
       "title": "微積分(一)",
@@ -22,7 +22,7 @@
         {
           "tag": "W3",
           "name": "Week 3 補救教學",
-          "url": "",
+          "url": "./src/materials/teaching/calculus_I/9_23.pdf",
           "type": "file"
         },
         {
