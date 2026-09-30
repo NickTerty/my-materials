@@ -1,5 +1,5 @@
 {
-  "lastUpdate": "2026.9.28",
+  "lastUpdate": "2026.9.30",
   "ta": [
     {
       "title": "微積分(一)",
@@ -34,7 +34,7 @@
         {
           "tag": "W4",
           "name": "Week 4 補救教學",
-          "url": "",
+          "url": "./src/materials/teaching/calculus_I/9_30.pdf",
           "type": "file"
         }
       ]
@@ -64,9 +64,15 @@
           "type": "file"
         },
         {
+          "tag": "HW",
+          "name": "Logics's HW (解答)",
+          "url": "./src/materials/teaching/advanced_cal_I/Homework_for_Introduction_to_Mathematics__Fall_2026_solution.pdf",
+          "type": "file"
+        },
+        {
           "tag": "W4",
-          "name": "Section 1.4",
-          "url": "",
+          "name": "Section 1.4 & 1.5(not all)",
+          "url": "src/materials/teaching/advanced_cal_I/9_30_AC.pdf",
           "type": "file"
         }
       ]
