@@ -1,5 +1,5 @@
 {
-  "lastUpdate": "2026.9.30",
+  "lastUpdate": "2026.10.3",
   "ta": [
     {
       "title": "微積分(一)",
@@ -80,6 +80,20 @@
   ],
   "student": [
     {
+      "title": "幾何學",
+      "subtitle": "Geometry | Fall 2026 | 應數四",
+      "status": "115-1",
+      "badge": "Student Notes",
+      "files": [
+        {
+          "tag": "Project",
+          "name": "AI Project",
+          "url": "",
+          "type": "link"
+        }
+      ]
+    },
+    {
       "title": "常微分方程",
       "subtitle": "Ordinary Differential Equations | Fall 2026 | 資工二",
       "status": "115-1",
@@ -93,8 +107,8 @@
         },
         {
           "tag": "Notes",
-          "name": "Chapter 2",
-          "url": "",
+          "name": "Chapter 2(V1)",
+          "url": "./src/materials/course/ode/ODE_chap2.pdf",
           "type": "file"
         }
       ]
