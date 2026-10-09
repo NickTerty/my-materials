@@ -1,677 +1,409 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>幾何學實驗室：扭率 (Torsion) 雲霄飛車體感體驗</title>
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Three.js & OrbitControls -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    /* 客製化滾動條 */
-    ::-webkit-scrollbar {
-      width: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: rgba(15, 23, 42, 0.6);
-    }
-    ::-webkit-scrollbar-thumb {
-      background: rgba(51, 65, 85, 0.7);
-      border-radius: 9999px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: rgba(71, 85, 105, 0.9);
-    }
-    /* 第一人稱駕駛艙邊緣暈影 */
-    .cockpit-frame {
-      box-shadow: inset 0 0 120px rgba(0,0,0,0.9), inset 0 0 35px rgba(16, 185, 129, 0.25);
-    }
-    /* 滑桿自訂美化 */
-    input[type=range] {
-      -webkit-appearance: none;
-      background: transparent;
-    }
-    input[type=range]::-webkit-slider-runnable-track {
-      height: 6px;
-      border-radius: 9999px;
-      background: #334155;
-    }
-    input[type=range]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      height: 18px;
-      width: 18px;
-      border-radius: 50%;
-      background: #ffffff;
-      box-shadow: 0 0 10px rgba(0,0,0,0.4);
-      margin-top: -6px;
-      cursor: pointer;
-      transition: transform 0.15s ease, background 0.15s ease;
-    }
-    input[type=range]::-webkit-slider-thumb:hover {
-      transform: scale(1.15);
-      background: #38bdf8;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>F1 賽車線幾何學：切向量 T、法向量 N、密切圓與曲率 κ(s)</title>
+<style>
+:root{color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;height:100vh;display:flex;background:#0b1120;color:#e2e8f0;font:14px/1.5 system-ui,"Noto Sans TC","Microsoft JhengHei",sans-serif}
+#stage{flex:1;position:relative;min-width:0}
+#trackCanvas{width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+#trackCanvas:active{cursor:grabbing}
+.tools{position:absolute;right:12px;top:12px;display:flex;flex-direction:column;gap:6px}
+.tools button{width:40px;height:40px;border-radius:10px;border:1px solid #334155;background:rgba(15,23,42,.9);color:#e2e8f0;font-size:18px;cursor:pointer}
+.tools button.on{background:#4f46e5;border-color:#818cf8}
+.hint{position:absolute;left:12px;top:12px;background:rgba(15,23,42,.8);border:1px solid #334155;border-radius:10px;padding:5px 10px;font-size:11px;color:#94a3b8;pointer-events:none}
+.legend{position:absolute;left:12px;bottom:12px;background:rgba(15,23,42,.88);border:1px solid #334155;border-radius:12px;padding:10px 12px;font-size:12px;line-height:1.8}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-2px}
+aside{width:430px;overflow-y:auto;padding:16px;background:#111a2e;border-left:1px solid #1e293b}
+h1{font-size:19px;margin:0 0 4px}
+.sub{color:#94a3b8;font-size:12px;margin:0 0 12px}
+.lab{font-size:12px;font-weight:700;color:#cbd5e1;margin:12px 0 5px}
+.grp{display:grid;gap:6px;grid-template-columns:repeat(3,1fr)}
+.btn{background:#1e293b;border:1px solid #334155;color:#cbd5e1;border-radius:10px;padding:7px 4px;font-size:12px;cursor:pointer}
+.btn.on{background:#334155;color:#fff;border-color:#64748b}
+.btn small{display:block;color:#94a3b8;font-size:10px}
+.row{display:flex;gap:8px;align-items:center;margin-top:10px}
+#play{flex:1;background:#4f46e5;border:0;color:#fff;font-weight:700;border-radius:10px;padding:9px;cursor:pointer}
+select{background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:8px;padding:7px}
+input[type=range]{width:100%}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.card{background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:10px}
+.card b{display:block;font-size:11px;color:#94a3b8;font-weight:600}
+.big{font:800 26px ui-monospace,Consolas,monospace}
+.bar{height:7px;background:#1e293b;border-radius:9px;overflow:hidden;margin-top:5px}
+.bar>div{height:100%;width:0;background:#38bdf8}
+#state{display:inline-block;font-size:11px;font-weight:700;padding:1px 8px;border-radius:9px;margin-left:6px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+td,th{padding:3px 4px;text-align:right}
+td:first-child,th:first-child{text-align:left}
+th{color:#94a3b8;font-weight:600}
+canvas.ch{width:100%;height:110px;display:block;background:#0f172a;border:1px solid #1e293b;border-radius:10px}
+.note{background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:10px 12px;font-size:12px;color:#cbd5e1;margin-top:12px}
+.note p{margin:3px 0}
+details.note{margin:0 0 12px}
+details.note summary{cursor:pointer;font-weight:700;font-size:13px;color:#f1f5f9}
+.step{font-weight:700;color:#fbbf24;margin:10px 0 3px;font-size:13px}
+.note ul{margin:3px 0;padding-left:18px}.note li{margin:4px 0}.note li b{color:#f1f5f9}
+.note svg{width:100%;max-width:320px;display:block;margin:6px auto;background:#0b1120;border-radius:10px}
+@media(max-width:860px){body{flex-direction:column;height:auto;min-height:100vh}#stage{height:62vh;flex:none}aside{width:100%;border-left:0}}
+</style>
 </head>
-<body class="bg-slate-950 text-slate-100 font-sans h-screen flex flex-col md:flex-row overflow-hidden select-none antialiased">
+<body>
+<div id="stage">
+  <canvas id="trackCanvas"></canvas>
+  <div class="hint">滾輪／雙指縮放・拖曳平移・雙擊重設</div>
+  <div class="tools">
+    <button id="zIn" title="放大">＋</button>
+    <button id="zOut" title="縮小">－</button>
+    <button id="zFollow" title="跟車視角">🎯</button>
+    <button id="zReset" title="重設視角">⟲</button>
+  </div>
+  <div class="legend">
+    <div><i style="background:#2b2f36;border:1px solid #fff"></i>瀝青賽道（白線＝賽道邊界）</div>
+    <div><i style="background:repeating-linear-gradient(90deg,#ef4444 0 4px,#fff 4px 8px)"></i>路緣石 Kerb</div>
+    <div><i style="background:#59606b"></i>瀝青緩衝區 Runoff</div>
+    <div><i style="background:#b8a36e"></i>碎石坑 Gravel trap</div>
+    <div><i style="background:#e2e8f0"></i>防護牆 Barrier</div>
+    <div style="color:#f87171">T 切向量（紅）　<span style="color:#4ade80">N 法向量（綠）</span>　<span style="color:#fbbf24">密切圓（橘）</span></div>
+  </div>
+</div>
+<aside>
+  <h1>賽車線與曲率 κ(s)</h1>
+  <p class="sub">簡化模型：以直線＋圓弧組成賽道，單位為公尺，非真實座標。</p>
 
-  <!-- 3D 視覺畫布容器 -->
-  <div id="canvas-container" class="relative flex-1 h-[50vh] md:h-full bg-slate-950 cursor-grab active:cursor-grabbing">
-    
-    <!-- 自由視角浮動資訊條 -->
-    <div id="freeViewHint" class="absolute top-5 left-5 bg-slate-900/70 backdrop-blur-xl border border-slate-700/60 rounded-2xl px-4 py-3 text-xs text-slate-300 shadow-2xl pointer-events-none flex items-center gap-3">
-      <div class="relative flex h-3 w-3">
-        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-        <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-      </div>
-      <div>
-        <div class="font-bold text-slate-100 tracking-wide">自由觀察模式</div>
-        <div class="text-[11px] text-slate-400 mt-0.5">左鍵旋轉 · 滾輪縮放 · 右鍵平移</div>
-      </div>
+  <details class="note" open>
+    <summary>先讀這裡：數學定義 → 對應到 F1</summary>
+    <div class="step">第一步　抽象幾何：平面曲線 r(s) = (x(s), y(s))，s 為弧長</div>
+    <svg viewBox="0 0 300 165" font-family="sans-serif" font-weight="700">
+      <ellipse cx="130" cy="82" rx="90" ry="60" fill="none" stroke="#64748b" stroke-width="2.5"/>
+      <circle cx="180" cy="82" r="40" fill="rgba(251,191,36,.1)" stroke="#fbbf24" stroke-width="2" stroke-dasharray="5 4"/>
+      <line x1="220" y1="82" x2="220" y2="28" stroke="#ef4444" stroke-width="3.5"/><path d="M220 22 l-6 12 h12z" fill="#ef4444"/>
+      <line x1="220" y1="82" x2="172" y2="82" stroke="#22c55e" stroke-width="3.5"/><path d="M166 82 l12 -6 v12z" fill="#22c55e"/>
+      <circle cx="220" cy="82" r="5" fill="#facc15"/><circle cx="180" cy="82" r="3" fill="#fbbf24"/>
+      <text x="230" y="36" fill="#ef4444" font-size="18">T</text>
+      <text x="190" y="74" fill="#22c55e" font-size="18">N</text>
+      <text x="180" y="112" fill="#fbbf24" font-size="14" text-anchor="middle">R = 1/κ</text>
+      <text x="180" y="146" fill="#fbbf24" font-size="12" text-anchor="middle">密切圓</text>
+      <text x="228" y="100" fill="#facc15" font-size="12">P</text>
+    </svg>
+    <ul>
+      <li><b>T（單位切向量）</b>：T = r′(s)，長度為 1，指向曲線前進的方向。</li>
+      <li><b>κ（曲率）</b>：κ = |T′|，代表切線方向隨弧長「轉得多快」。直線 κ = 0；半徑 r 的圓 κ = 1/r。座標式：κ = |x′y″ − y′x″| / (x′² + y′²)<sup>3/2</sup>。</li>
+      <li><b>N（單位法向量）</b>：與 T 垂直，指向曲線彎向的那一側，並且 T′ = κN。</li>
+      <li><b>密切圓</b>：在 P 點與曲線位置、切線、曲率三者都相同的圓，圓心 = P + N/κ，半徑 R = 1/κ。</li>
+    </ul>
+    <div class="step">第二步　套用到 F1：這些符號各自代表什麼？</div>
+    <ul>
+      <li><b>曲線 r(s)</b> ＝ 賽車重心走過的路線（賽車線）。</li>
+      <li><b>T</b> ＝ 車頭／車速的方向；速度向量 = vT。</li>
+      <li><b>κ 與 R</b> ＝ 彎有多「緊」。髮夾彎 R 小、κ 大；高速彎 R 大、κ 小；直線 R = ∞。</li>
+      <li><b>N</b> ＝ 輪胎必須把車「拉向」的方向（向心方向）。加速度分成兩部分：a = (dv/dt)·T + κv²·N，沿 T 的是油門／煞車，沿 N 的是側向加速度 a<sub>N</sub> = κv²。</li>
+      <li><b>速度上限</b>：輪胎抓地有極限 a<sub>N</sub> ≤ a<sub>max</sub>，因此 v ≤ √(a<sub>max</sub>/κ) = √(a<sub>max</sub>·R)。<b>R 越大，能過彎的速度越高。</b></li>
+      <li><b>賽車線的目的</b>：在白線與路緣石之間，讓路線最小的 R 盡量大（最大 κ 盡量小）。這就是「外-內-外」：入彎前靠外、彎心貼內、出彎再回外。貼內側雖然路徑短，但 R 變小，車速被迫降低。</li>
+    </ul>
+  </details>
+
+  <div class="lab">① 選擇彎角</div>
+  <div class="grp" id="gCorner">
+    <button class="btn" data-k="fast">高速彎<small>R≈110 m・90°</small></button>
+    <button class="btn on" data-k="hairpin">髮夾彎<small>Monaco Fairmont 型・180°</small></button>
+    <button class="btn" data-k="s">高速 S 彎<small>左右連續彎</small></button>
+  </div>
+
+  <div class="lab">② 選擇行車路線（賽車會沿此線行駛）</div>
+  <div class="grp" id="gLine">
+    <button class="btn" data-m="center"><span style="color:#94a3b8">●</span> 中心線</button>
+    <button class="btn" data-m="inner"><span style="color:#f43f5e">●</span> 貼內側<small>「切西瓜」</small></button>
+    <button class="btn on" data-m="racing"><span style="color:#34d399">●</span> 外-內-外<small>賽車線</small></button>
+  </div>
+
+  <div class="row"><input id="slider" type="range" min="0" max="100" step="0.5" value="0"></div>
+  <div class="row">
+    <button id="play">▶ 沿軌道行駛（速度依物理極限變化）</button>
+    <select id="rate"><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select>
+  </div>
+
+  <div class="cards">
+    <div class="card" style="grid-column:1/3">
+      <b>車速表 <span id="state"></span></b>
+      <div class="big" id="spd" style="color:#34d399">0 km/h</div>
+      <div class="bar"><div id="spdBar" style="background:#34d399"></div></div>
     </div>
-
-    <!-- 雲霄飛車第一人稱 HUD -->
-    <div id="cockpitHUD" class="hidden absolute inset-0 pointer-events-none cockpit-frame flex flex-col justify-between p-6 border-[16px] border-slate-950/80">
-      <div class="flex justify-between items-center text-xs font-mono text-emerald-400 bg-slate-900/80 backdrop-blur-xl px-4 py-2.5 rounded-xl border border-emerald-500/30 w-fit shadow-xl">
-        <span class="inline-flex items-center gap-2">
-          <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
-          駕駛艙視角 | 拖曳滑鼠轉動頭部
-        </span>
-      </div>
-
-      <!-- 水平儀準心與回正鈕 -->
-      <div class="flex flex-col justify-center items-center">
-        <div class="w-20 h-20 border-2 border-emerald-400/40 rounded-full flex items-center justify-center relative backdrop-blur-xs">
-          <div class="absolute w-28 h-0.5 bg-emerald-400/60"></div>
-          <div class="w-2.5 h-2.5 bg-emerald-400 rounded-full shadow-[0_0_8px_#34d399]"></div>
-        </div>
-        <button id="resetHeadBtn" class="pointer-events-auto mt-3 text-xs font-semibold bg-slate-900/80 hover:bg-slate-800 text-emerald-300 px-4 py-1.5 rounded-full border border-emerald-500/40 shadow-lg backdrop-blur-md transition-all active:scale-95">
-          🔄 頭部視線回正
-        </button>
-      </div>
-
-      <div class="text-center text-xs font-medium text-amber-200 bg-slate-900/80 backdrop-blur-xl py-2 px-5 rounded-xl border border-amber-500/40 w-fit mx-auto shadow-2xl">
-        地平線與立柱側向傾斜翻滾角速度即為 <span class="font-bold font-mono text-amber-400">扭率 &tau;</span>
-      </div>
-    </div>
-
-    <!-- TNB 標架懸浮小標籤 -->
-    <div class="absolute bottom-5 left-5 bg-slate-900/70 backdrop-blur-xl border border-slate-700/60 rounded-2xl p-4 text-xs shadow-2xl pointer-events-none space-y-2">
-      <div class="text-[11px] font-bold text-slate-400 tracking-wider uppercase border-b border-slate-700/60 pb-1.5">Frenet 標架圖例</div>
-      <div class="flex items-center gap-2.5"><span class="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_0_6px_#f43f5e]"></span> <span class="text-slate-200 font-medium">切向量 <b>T</b> (速度方向)</span></div>
-      <div class="flex items-center gap-2.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_6px_#10b981]"></span> <span class="text-slate-200 font-medium">主法向量 <b>N</b> (彎曲加速度)</span></div>
-      <div class="flex items-center gap-2.5"><span class="w-2.5 h-2.5 rounded-full bg-sky-500 shadow-[0_0_6px_#0ea5e9]"></span> <span class="text-slate-200 font-medium">次法向量 <b>B</b> (車頂朝向)</span></div>
+    <div class="card"><b>曲率 κ = 1/R（1/m）</b><div class="big" id="kv" style="color:#fb7185;font-size:22px">0</div></div>
+    <div class="card"><b>密切圓半徑 R（m）</b><div class="big" id="rv" style="color:#fbbf24;font-size:22px">∞</div></div>
+    <div class="card" style="grid-column:1/3">
+      <b>側向加速度 a<sub>N</sub> = κv² 　／　輪胎極限（含下壓力）</b>
+      <div class="big" id="an" style="font-size:20px;color:#38bdf8">0 G</div>
+      <div class="bar"><div id="anBar"></div></div>
     </div>
   </div>
 
-  <!-- 右側控制面板 (現代化 App 樣式) -->
-  <aside class="w-full md:w-[440px] bg-slate-900/90 backdrop-blur-2xl border-t md:border-t-0 md:border-l border-slate-800/80 p-6 flex flex-col justify-between overflow-y-auto shadow-2xl">
-    <div class="space-y-5">
-      
-      <!-- App Header -->
-      <div class="border-b border-slate-800 pb-4">
-        <div class="flex items-center justify-between">
-          <span class="text-[11px] font-bold tracking-widest text-emerald-400 bg-emerald-950/60 border border-emerald-800/60 px-3 py-1 rounded-full uppercase">
-            微分幾何互動平台
-          </span>
-          <span class="text-xs text-slate-400 font-mono">Torsion Lab</span>
-        </div>
-        <h1 class="text-2xl font-black mt-2 text-white tracking-tight">扭率 (Torsion, &tau;)</h1>
-        <p class="text-xs text-slate-400 mt-1 leading-relaxed">
-          度量空間軌道脫離二維平面的旋轉速率。若 &tau; &equiv; 0，整條曲線躺於同一密切平面。
-        </p>
-      </div>
+  <div class="lab">③ 三條路線比較（本段賽道）</div>
+  <table><thead><tr><th>路線</th><th>用時</th><th>路徑長</th><th>最低車速</th></tr></thead><tbody id="times"></tbody></table>
+  <p class="sub" id="verdict" style="margin-top:6px"></p>
 
-      <!-- 視角切換膠囊按鈕 -->
-      <button id="toggleCamBtn" class="w-full py-3.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 active:scale-[0.98] text-slate-950 font-black rounded-2xl text-sm transition-all shadow-[0_4px_20px_rgba(16,185,129,0.3)] flex items-center justify-center gap-2">
-        <span>🎢 切換至雲霄飛車第一人稱視角</span>
-      </button>
+  <div class="lab">曲率 |κ|(s)　（縱線＝目前位置）</div>
+  <canvas class="ch" id="chK"></canvas>
+  <div class="lab">速度 v(s) km/h</div>
+  <canvas class="ch" id="chV"></canvas>
 
-      <!-- 幾何型態切換 (分段選擇器 Segmented Control) -->
-      <div>
-        <label class="block text-xs font-bold text-slate-300 mb-2">軌道幾何模型：</label>
-        <div class="grid grid-cols-3 gap-2 bg-slate-950/60 p-1.5 rounded-2xl border border-slate-800">
-          <button id="btnCircle" class="curve-btn py-2 px-1 text-xs font-semibold rounded-xl text-slate-400 hover:text-slate-200 transition-all text-center">
-            二維圓<br><span class="text-[10px] text-emerald-400 font-mono">&tau; = 0</span>
-          </button>
-          <button id="btnHelix" class="curve-btn py-2 px-1 text-xs font-bold rounded-xl bg-slate-800 text-white shadow-md border border-slate-700 transition-all text-center">
-            常螺線<br><span class="text-[10px] text-cyan-400 font-mono">&tau; = 常數</span>
-          </button>
-          <button id="btnWave" class="curve-btn py-2 px-1 text-xs font-semibold rounded-xl text-slate-400 hover:text-slate-200 transition-all text-center">
-            扭曲波浪<br><span class="text-[10px] text-amber-400 font-mono">&tau; 變號</span>
-          </button>
-        </div>
-      </div>
+  <div class="note">
+    <p style="color:#fbbf24">觀察重點：把滑桿拖到彎心，比較三條路線的 R、κ 與車速；路緣石外是緩衝區與碎石坑，不能隨意抄捷徑。</p>
+    <p>模型為簡化版：輪胎抓地 = g(1.6 + 下壓力項)，煞車約 5G，加速約 1.2G。</p>
+  </div>
+</aside>
 
-      <!-- 核心互動控制卡片 -->
-      <div class="space-y-4 bg-slate-800/40 p-4 rounded-2xl border border-slate-800/80 shadow-inner">
-        
-        <!-- 速度控制器 -->
-        <div>
-          <div class="flex justify-between items-center text-xs font-bold mb-2">
-            <span class="text-slate-300">行駛速度</span>
-            <div class="flex items-center gap-2">
-              <span id="speedVal" class="text-amber-400 font-mono font-bold text-sm">1.0x</span>
-              <div class="flex gap-1 bg-slate-900/80 p-0.5 rounded-lg border border-slate-700/60">
-                <button class="speed-preset px-2 py-0.5 rounded-md text-[10px] text-slate-400 hover:text-white transition" data-speed="0.3">0.3x</button>
-                <button class="speed-preset px-2 py-0.5 rounded-md bg-amber-500 text-slate-950 font-bold text-[10px] shadow" data-speed="1.0">1.0x</button>
-                <button class="speed-preset px-2 py-0.5 rounded-md text-[10px] text-slate-400 hover:text-white transition" data-speed="2.0">2.0x</button>
-                <button class="speed-preset px-2 py-0.5 rounded-md text-[10px] text-slate-400 hover:text-white transition" data-speed="3.5">3.5x</button>
-              </div>
-            </div>
-          </div>
-          <input id="speedSlider" type="range" min="0.1" max="4.0" step="0.1" value="1.0" class="w-full">
-        </div>
-
-        <!-- 爬升係數 b -->
-        <div id="pitchControlWrap">
-          <div class="flex justify-between text-xs font-bold mb-1.5">
-            <span class="text-slate-300">爬升係數 (b) · 決定扭率大小</span>
-            <span id="pitchVal" class="text-emerald-400 font-mono text-sm">0.35</span>
-          </div>
-          <input id="pitchSlider" type="range" min="0" max="0.8" step="0.02" value="0.35" class="w-full">
-        </div>
-
-        <!-- 曲線參數 t -->
-        <div>
-          <div class="flex justify-between text-xs font-bold mb-1.5">
-            <span class="text-slate-300">軌道參數位置 (t)</span>
-            <span id="tVal" class="text-cyan-400 font-mono text-sm">0.00</span>
-          </div>
-          <input id="tSlider" type="range" min="0" max="18.84" step="0.05" value="0" class="w-full">
-        </div>
-
-        <!-- 播放按鈕 -->
-        <button id="playBtn" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white font-bold rounded-xl text-xs tracking-wider uppercase transition shadow-lg shadow-indigo-950/50 flex items-center justify-center gap-2">
-          <span>▶ 開始雲霄飛車行駛</span>
-        </button>
-      </div>
-
-      <!-- 即時數值儀表指標 (Metric Cards) -->
-      <div class="grid grid-cols-2 gap-3">
-        <div class="bg-gradient-to-br from-slate-800/80 to-slate-900/90 border border-slate-700/60 rounded-2xl p-4 shadow-xl">
-          <div class="text-[11px] font-bold text-slate-400 tracking-wide uppercase">曲率 &kappa; (轉向程度)</div>
-          <div id="curvVal" class="text-2xl font-black font-mono text-amber-400 mt-1">0.867</div>
-        </div>
-        <div class="bg-gradient-to-br from-slate-800/80 to-slate-900/90 border border-slate-700/60 rounded-2xl p-4 shadow-xl">
-          <div class="text-[11px] font-bold text-slate-400 tracking-wide uppercase">扭率 &tau; (桶滾角速度)</div>
-          <div id="torVal" class="text-2xl font-black font-mono text-emerald-400 mt-1">0.303</div>
-        </div>
-      </div>
-
-      <!-- 2D 圖表卡片 -->
-      <div class="bg-slate-800/40 border border-slate-800 rounded-2xl p-4 shadow-xl">
-        <div class="text-xs font-bold text-slate-300 mb-2 flex justify-between items-center">
-          <span>&tau;(t) 即時圖譜</span>
-          <span class="text-[10px] text-rose-400 font-mono font-medium">● 當前位置</span>
-        </div>
-        <div class="h-24 w-full">
-          <canvas id="torsionChart"></canvas>
-        </div>
-      </div>
-    </div>
-
-    <!-- App 底部署名 -->
-    <div class="mt-4 pt-3 border-t border-slate-800 text-[11px] text-slate-500 text-center font-medium">
-      微分幾何 AI 專題作業 • TNB 標架與物理體感[cite: 1, 2]
-    </div>
-  </aside>
-
-  <script>
-    // --- 核心幾何參數 ---
-    let currentCurveType = 'helix';
-    const R = 3.5;
-    let b = 0.35;
-    let t = 0.0;
-    const tMax = 6 * Math.PI;
-    let isPlaying = false;
-    let isCockpitView = false;
-    
-    // 速度參數
-    const baseSpeed = 0.025;
-    let speedMultiplier = 1.0;
-
-    // 第一人稱頭部視線角
-    let headYaw = 0.0;
-    let headPitch = 0.0;
-    let isDraggingHead = false;
-    let prevMouseX = 0;
-    let prevMouseY = 0;
-
-    // --- Three.js 初始化 ---
-    const container = document.getElementById('canvas-container');
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x050811);
-    scene.fog = new THREE.FogExp2(0x050811, 0.035);
-
-    const camera = new THREE.PerspectiveCamera(65, container.clientWidth / container.clientHeight, 0.1, 100);
-    camera.position.set(9, 9, 11);
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(container.clientWidth, container.clientHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.shadowMap.enabled = true;
-    container.appendChild(renderer.domElement);
-
-    const controls = new THREE.OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-
-    scene.add(new THREE.AmbientLight(0xffffff, 0.7));
-    const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
-    dirLight.position.set(10, 20, 15);
-    scene.add(dirLight);
-
-    // 網格與立柱
-    const groundGrid = new THREE.GridHelper(50, 50, 0x1e293b, 0x0f172a);
-    groundGrid.position.y = -3.5;
-    scene.add(groundGrid);
-
-    const pillarGroup = new THREE.Group();
-    const pillarGeo = new THREE.CylinderGeometry(0.12, 0.12, 12, 16);
-    const pillarMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.5 });
-    for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 4) {
-      const px = Math.cos(angle) * 7.5;
-      const pz = Math.sin(angle) * 7.5;
-      const pillar = new THREE.Mesh(pillarGeo, pillarMat);
-      pillar.position.set(px, 2.5, pz);
-      pillarGroup.add(pillar);
+<script>
+//CORE_START
+const G=9.81,VMAX=90,A_ACC=12,A_DEC=48,MU=1.6,KDF=5.3e-4,V0=75;
+const CORNERS={
+  fast:{W:14,E:5.5,f:.55,pre:90,post:70,segs:[{L:200},{R:110,deg:90,dir:-1},{L:260}]},
+  hairpin:{W:10,E:4,f:.58,pre:60,post:40,segs:[{L:110},{R:16,deg:180,dir:-1},{L:110}]},
+  s:{W:14,E:5.5,f:.5,pre:80,post:70,segs:[{L:180},{R:100,deg:55,dir:-1},{L:40},{R:100,deg:55,dir:1},{L:180}]}
+};
+function build(key){
+  const c=CORNERS[key],P=[],arcs=[];let x=0,y=0,th=0,s=0;
+  P.push({x,y,th,s});
+  for(const g of c.segs){
+    if(g.L){for(let i=0;i<g.L;i++){x+=Math.cos(th);y+=Math.sin(th);s+=1;P.push({x,y,th,s});}}
+    else{
+      const len=g.R*g.deg*Math.PI/180,n=Math.ceil(len),ds=len/n,s0=s;
+      for(let i=0;i<n;i++){const mid=th+g.dir*ds/g.R/2;x+=Math.cos(mid)*ds;y+=Math.sin(mid)*ds;th+=g.dir*ds/g.R;s+=ds;P.push({x,y,th,s});}
+      arcs.push({s0,s1:s,dir:g.dir});
     }
-    scene.add(pillarGroup);
+  }
+  let a=1e9,b=-1e9,c2=1e9,d=-1e9;
+  P.forEach(p=>{a=Math.min(a,p.x);b=Math.max(b,p.x);c2=Math.min(c2,p.y);d=Math.max(d,p.y)});
+  return {c,P,arcs,S:s,bb:[a,b,c2,d]};
+}
+function keysFor(T,mode){
+  const {c,arcs,S}=T,E=c.E,f0=arcs[0],fl=arcs[arcs.length-1];
+  if(mode==='center')return null;
+  const k=[[0,0]];
+  if(mode==='inner'){
+    k.push([f0.s0-50,0],[f0.s0-8,f0.dir*E]);
+    arcs.forEach((r,i)=>{if(i)k.push([r.s0,r.dir*E]);k.push([r.s1,r.dir*E]);});
+    k.push([fl.s1+8,fl.dir*E],[fl.s1+50,0]);
+  }else{
+    k.push([f0.s0-c.pre,-f0.dir*E]);
+    arcs.forEach(r=>k.push([r.s0+c.f*(r.s1-r.s0),r.dir*E]));
+    k.push([fl.s1+c.post,-fl.dir*E]);
+  }
+  k.push([S,0]);return k;
+}
+function ease(k,s){
+  if(s<=k[0][0])return k[0][1];
+  for(let i=0;i<k.length-1;i++){
+    if(s<=k[i+1][0]){const u=(s-k[i][0])/(k[i+1][0]-k[i][0]);return k[i][1]+(k[i+1][1]-k[i][1])*(1-Math.cos(Math.PI*u))/2;}
+  }
+  return k[k.length-1][1];
+}
+function makeLine(T,mode){
+  const k=keysFor(T,mode),n=T.P.length,pts=[];
+  for(const p of T.P){const d=k?ease(k,p.s):0;pts.push({x:p.x-d*Math.sin(p.th),y:p.y+d*Math.cos(p.th)});}
+  let kap=new Array(n).fill(0);const m=3;
+  for(let i=m;i<n-m;i++){
+    const a=pts[i-m],b=pts[i],c=pts[i+m],ux=b.x-a.x,uy=b.y-a.y,vx=c.x-b.x,vy=c.y-b.y;
+    kap[i]=2*(ux*vy-uy*vx)/(Math.hypot(ux,uy)*Math.hypot(vx,vy)*Math.hypot(c.x-a.x,c.y-a.y));
+  }
+  for(let i=0;i<m;i++){kap[i]=kap[m];kap[n-1-i]=kap[n-1-m];}
+  kap=kap.map((_,i)=>{let s=0,c=0;for(let j=i-2;j<=i+2;j++)if(j>=0&&j<n){s+=kap[j];c++;}return s/c;});
+  const seg=[];for(let i=0;i<n-1;i++)seg.push(Math.hypot(pts[i+1].x-pts[i].x,pts[i+1].y-pts[i].y));
+  const v=kap.map(q=>{const den=Math.abs(q)-G*KDF;return Math.min(VMAX,den>1e-9?Math.sqrt(MU*G/den):VMAX);});
+  v[0]=Math.min(v[0],V0);
+  for(let i=0;i<n-1;i++)v[i+1]=Math.min(v[i+1],Math.sqrt(v[i]*v[i]+2*A_ACC*seg[i]));
+  for(let i=n-2;i>=0;i--)v[i]=Math.min(v[i],Math.sqrt(v[i+1]*v[i+1]+2*A_DEC*seg[i]));
+  let t=0,len=0;
+  for(let i=0;i<n-1;i++){t+=2*seg[i]/(v[i]+v[i+1]);len+=seg[i];}
+  return {mode,pts,kap,v,seg,total:t,len,vmin:Math.min(...v),kmax:Math.max(...kap.map(Math.abs))};
+}
+//CORE_END
 
-    // --- 幾何計算 ---
-    function evalCurve(u, type, paramB) {
-      let pos = new THREE.Vector3();
-      let d1 = new THREE.Vector3();
-      let d2 = new THREE.Vector3();
+const view={z:1,px:0,py:0};let follow=false,lastV={ox:0,oy:0,sc:1,w:1,h:1,cx:0,cy:0};
+let T,L,key='hairpin',mode='racing',idx=0,playing=false,rate=1,last=0;
+const $=id=>document.getElementById(id);
+const cv=$('trackCanvas'),ctx=cv.getContext('2d');
+const COL={center:'#94a3b8',inner:'#f43f5e',racing:'#34d399'};
+const NAME={center:'中心線',inner:'貼內側',racing:'外-內-外'};
+const MODES=['center','inner','racing'];
 
-      if (type === 'circle') {
-        pos.set(R * Math.cos(u), 0, R * Math.sin(u));
-        d1.set(-R * Math.sin(u), 0, R * Math.cos(u));
-        d2.set(-R * Math.cos(u), 0, -R * Math.sin(u));
-      } else if (type === 'helix') {
-        pos.set(R * Math.cos(u), paramB * u - 2.5, R * Math.sin(u));
-        d1.set(-R * Math.sin(u), paramB, R * Math.cos(u));
-        d2.set(-R * Math.cos(u), 0, -R * Math.sin(u));
-      } else if (type === 'wave') {
-        const y = Math.sin(2 * u) * 1.8;
-        const dy = 2 * Math.cos(2 * u) * 1.8;
-        const d2y = -4 * Math.sin(2 * u) * 1.8;
-        pos.set(R * Math.cos(u), y, R * Math.sin(u));
-        d1.set(-R * Math.sin(u), dy, R * Math.cos(u));
-        d2.set(-R * Math.cos(u), d2y, -R * Math.sin(u));
-      }
-      return { pos, d1, d2 };
+function setCorner(k){
+  key=k;T=build(k);L={};MODES.forEach(m=>L[m]=makeLine(T,m));
+  idx=0;$('slider').max=T.P.length-1;$('slider').value=0;
+  const best=Math.min(...MODES.map(m=>L[m].total));
+  $('times').innerHTML=MODES.map(m=>`<tr style="color:${COL[m]}"><td>${NAME[m]}${L[m].total===best?' 🏆':''}</td><td>${L[m].total.toFixed(2)} s</td><td>${L[m].len.toFixed(0)} m</td><td>${(L[m].vmin*3.6).toFixed(0)} km/h</td></tr>`).join('');
+  const dt=L.inner.total-L.racing.total;
+  $('verdict').textContent=dt>0?`貼內側路徑較短（少 ${(L.racing.len-L.inner.len).toFixed(1)} m），但比外-內-外慢 ${dt.toFixed(2)} 秒。`:`此彎角貼內側反而較快（${(-dt).toFixed(2)} 秒），請看曲率圖找原因。`;
+  draw();
+}
+
+function carPos(){const ln=L[mode],i=Math.min(Math.floor(idx),T.P.length-2),f=idx-i,a=ln.pts[i],b=ln.pts[i+1];return{x:a.x+(b.x-a.x)*f,y:a.y+(b.y-a.y)*f};}
+function setFollow(b){
+  if(!b&&follow){view.px=lastV.ox-(lastV.w/2-lastV.cx*lastV.sc);view.py=lastV.oy-(lastV.h/2+lastV.cy*lastV.sc);}
+  follow=b;$('zFollow').classList.toggle('on',b);draw();
+}
+function zoomAt(r,mx,my){
+  const nz=Math.min(14,Math.max(.6,view.z*r)),k=nz/view.z;
+  if(!follow){view.px+=(mx-(mx-lastV.ox)*k)-lastV.ox;view.py+=(my-(my-lastV.oy)*k)-lastV.oy;}
+  view.z=nz;draw();
+}
+function resetView(){view.z=1;view.px=0;view.py=0;setFollow(false);}
+function edge(o,a,b){const r=[];for(let i=a;i<=b;i++){const p=T.P[i];r.push([p.x-o*Math.sin(p.th),p.y+o*Math.cos(p.th)]);}return r;}
+
+function arrow(x1,y1,x2,y2,col,lab){
+  const a=Math.atan2(y2-y1,x2-x1);
+  ctx.strokeStyle=col;ctx.fillStyle=col;ctx.lineWidth=3;ctx.setLineDash([]);
+  ctx.lineWidth=4.5;
+  ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(x2+4*Math.cos(a),y2+4*Math.sin(a));ctx.lineTo(x2-14*Math.cos(a-.45),y2-14*Math.sin(a-.45));ctx.lineTo(x2-14*Math.cos(a+.45),y2-14*Math.sin(a+.45));ctx.fill();
+  ctx.font='bold 26px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+  const lx=x2+22*Math.cos(a),ly=y2+22*Math.sin(a);
+  ctx.lineWidth=5;ctx.strokeStyle='#0b1120';ctx.lineJoin='round';ctx.strokeText(lab,lx,ly);ctx.fillText(lab,lx,ly);
+  ctx.textAlign='start';ctx.textBaseline='alphabetic';
+}
+
+function draw(){
+  const dpr=window.devicePixelRatio||1,w=cv.clientWidth,h=cv.clientHeight;
+  if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(h*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);}
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  const [x0,x1,y0,y1]=T.bb,M=42;
+  const sc=Math.min(w/(x1-x0+2*M),h/(y1-y0+2*M))*view.z;
+  const cx0=(x0+x1)/2,cy0=(y0+y1)/2,cp=carPos();
+  const ox=follow?w/2-cp.x*sc:w/2-cx0*sc+view.px,oy=follow?h/2+cp.y*sc:h/2+cy0*sc+view.py;
+  lastV={ox,oy,sc,w,h,cx:cx0,cy:cy0};
+  const X=x=>ox+x*sc,Y=y=>oy-y*sc,W=T.c.W,n=T.P.length;
+  const poly=(arr,wm,col,dash,minPx)=>{
+    ctx.beginPath();arr.forEach((p,i)=>i?ctx.lineTo(X(p[0]),Y(p[1])):ctx.moveTo(X(p[0]),Y(p[1])));
+    ctx.lineWidth=Math.max(minPx||0,wm*sc);ctx.strokeStyle=col;ctx.setLineDash(dash?dash.map(d=>d*sc):[]);ctx.lineCap='butt';ctx.lineJoin='round';ctx.stroke();ctx.setLineDash([]);
+  };
+  ctx.fillStyle='#2d5a3a';ctx.fillRect(0,0,w,h);
+  const ctr=edge(0,0,n-1);
+  poly(ctr,W+52,'#b8a36e');                       // 碎石坑
+  poly(ctr,W+14,'#59606b');                       // 瀝青緩衝區
+  [-1,1].forEach(sd=>{const e=edge(sd*(W/2+28),0,n-1);poly(e,2.6,'#1e293b');poly(e,0.9,'#e2e8f0',[3,3]);}); // 防護牆
+  poly(ctr,W,'#2b2f36');                          // 賽道
+  [-1,1].forEach(sd=>poly(edge(sd*W/2,0,n-1),0.45,'rgba(255,255,255,.9)'));
+  // 路緣石：只放在彎道區段
+  T.arcs.forEach(r=>{
+    const a=Math.max(0,Math.round(r.s0)-8),b=Math.min(n-1,Math.round(r.s1)+8);
+    [-1,1].forEach(sd=>{const e=edge(sd*(W/2+1.1),a,b);poly(e,2.2,'#ef4444');poly(e,2.2,'#fff',[2.5,2.5]);});
+  });
+  // 三條路線
+  MODES.forEach(m=>{
+    const sel=m===mode;
+    poly(L[m].pts.map(p=>[p.x,p.y]),sel?1.1:0.5,sel?COL[m]:COL[m]+'88',sel?null:[4,3],sel?3:1.5);
+  });
+  // 目前點：Frenet 標架與密切圓
+  const ln=L[mode],i=Math.min(Math.floor(idx),n-2),f=idx-i,lp=a=>a[i]+(a[i+1]-a[i])*f;
+  const p={x:0,y:0};
+  const pa=ln.pts[i],pb=ln.pts[i+1];p.x=pa.x+(pb.x-pa.x)*f;p.y=pa.y+(pb.y-pa.y)*f;
+  const q0=ln.pts[Math.max(0,i-1)],q1=ln.pts[Math.min(n-1,i+2)];
+  const tl=Math.hypot(q1.x-q0.x,q1.y-q0.y),Tx=(q1.x-q0.x)/tl,Ty=(q1.y-q0.y)/tl;
+  const k=lp(ln.kap),sg=k>=0?1:-1,Nx=-Ty*sg,Ny=Tx*sg,ak=Math.abs(k),R=ak>1e-5?1/ak:Infinity,v=lp(ln.v);
+  if(R*sc<60000){
+    const cx=p.x+Nx*R,cy=p.y+Ny*R;
+    ctx.beginPath();ctx.arc(X(cx),Y(cy),R*sc,0,6.2832);
+    ctx.fillStyle='rgba(251,191,36,.10)';ctx.fill();
+    ctx.strokeStyle='#fbbf24';ctx.lineWidth=2;ctx.setLineDash([7,6]);ctx.stroke();ctx.setLineDash([]);
+    ctx.beginPath();ctx.moveTo(X(p.x),Y(p.y));ctx.lineTo(X(cx),Y(cy));ctx.strokeStyle='rgba(251,191,36,.7)';ctx.lineWidth=1.5;ctx.setLineDash([3,4]);ctx.stroke();ctx.setLineDash([]);
+    ctx.beginPath();ctx.arc(X(cx),Y(cy),3.5,0,6.2832);ctx.fillStyle='#fbbf24';ctx.fill();
+  }
+  // 車身
+  ctx.save();ctx.translate(X(p.x),Y(p.y));ctx.rotate(-Math.atan2(Ty,Tx));
+  ctx.fillStyle='#facc15';ctx.shadowColor='#facc15';ctx.shadowBlur=10;
+  ctx.fillRect(-Math.max(7,2.9*sc),-Math.max(3,1.1*sc),Math.max(14,5.8*sc),Math.max(6,2.2*sc));ctx.restore();ctx.shadowBlur=0;
+  arrow(X(p.x),Y(p.y),X(p.x)+Tx*70,Y(p.y)-Ty*70,'#ef4444','T');
+  arrow(X(p.x),Y(p.y),X(p.x)+Nx*70,Y(p.y)-Ny*70,'#22c55e','N');
+  // R 標籤：放在遠離 T、N 箭頭的位置，圓很小時也不會疊在一起
+  {
+    const Px=X(p.x),Py=Y(p.y),rpx=isFinite(R)?R*sc:1e9,d=Math.max(Math.min(rpx,1e4)/2,105);
+    const rt=R<1000?'R = '+R.toFixed(1)+' m':'R = ∞（直線）';
+    ctx.font='bold 20px sans-serif';
+    const pw=ctx.measureText(rt).width+22,ph=32;
+    const ax=Math.min(w-pw/2-6,Math.max(pw/2+6,Px+Nx*d-Tx*(pw/2+34))),ay=Math.min(h-ph/2-6,Math.max(ph/2+6,Py-Ny*d+Ty*(ph/2+34)));
+    if(R<1000){
+      const e=Math.min(rpx,d);
+      ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(Px+Nx*e,Py-Ny*e);ctx.strokeStyle='rgba(251,191,36,.9)';ctx.lineWidth=1.5;ctx.setLineDash([]);ctx.stroke();
     }
+    ctx.fillStyle='rgba(15,23,42,.94)';ctx.strokeStyle='#fbbf24';ctx.lineWidth=2;
+    ctx.beginPath();ctx.roundRect(ax-pw/2,ay-ph/2,pw,ph,9);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#fbbf24';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(rt,ax,ay+1);
+    ctx.textAlign='start';ctx.textBaseline='alphabetic';
+  }
+  // 儀表
+  const kmh=v*3.6,ax=(ln.v[i+1]**2-ln.v[i]**2)/(2*ln.seg[i])/G,aN=v*v*ak/G,lim=MU+KDF*v*v;
+  $('spd').textContent=Math.round(kmh)+' km/h';$('spdBar').style.width=Math.min(100,kmh/3.3)+'%';
+  const st=$('state');
+  if(ax<-.15){st.textContent='煞車 '+(-ax).toFixed(1)+'G';st.style.background='#7f1d1d';}
+  else if(ax>.15){st.textContent='加速 '+ax.toFixed(1)+'G';st.style.background='#14532d';}
+  else{st.textContent='過彎／巡航';st.style.background='#1e3a8a';}
+  $('kv').textContent=ak.toFixed(4);$('rv').textContent=R<1000?R.toFixed(1):'∞（直線）';
+  $('an').textContent=aN.toFixed(2)+' G ／ '+lim.toFixed(2)+' G';
+  $('anBar').style.width=Math.min(100,aN/lim*100)+'%';
+  chart('chK',(l,j)=>Math.abs(l.kap[j]),Math.max(...MODES.map(m=>L[m].kmax))*1.1,3);
+  chart('chV',(l,j)=>l.v[j]*3.6,340,0);
+}
 
-    function computeFrenet(u, type, paramB) {
-      const { pos, d1, d2 } = evalCurve(u, type, paramB);
-      const speed = d1.length();
-      const T = d1.clone().normalize();
+function chart(id,get,ymax){
+  const c=$(id),x=c.getContext('2d'),dpr=window.devicePixelRatio||1,w=c.clientWidth,h=c.clientHeight;
+  if(c.width!==Math.round(w*dpr)){c.width=Math.round(w*dpr);c.height=Math.round(h*dpr);}
+  x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,w,h);
+  const l0=34,r0=6,t0=6,b0=6,pw=w-l0-r0,ph=h-t0-b0,n=T.P.length;
+  const PX=s=>l0+s/T.S*pw,PY=y=>t0+ph-Math.min(1,y/ymax)*ph;
+  x.strokeStyle='#1e293b';x.fillStyle='#64748b';x.font='10px sans-serif';x.lineWidth=1;
+  for(let g=0;g<=2;g++){const yy=t0+ph*g/2;x.beginPath();x.moveTo(l0,yy);x.lineTo(w-r0,yy);x.stroke();x.fillText((ymax*(1-g/2)).toFixed(ymax<1?3:0),2,yy+(g?0:9));}
+  MODES.forEach(m=>{
+    x.beginPath();for(let j=0;j<n;j++){const X=PX(T.P[j].s),Y=PY(get(L[m],j));j?x.lineTo(X,Y):x.moveTo(X,Y);}
+    x.strokeStyle=m===mode?COL[m]:COL[m]+'77';x.lineWidth=m===mode?2.2:1.2;x.stroke();
+  });
+  const i=Math.min(Math.floor(idx),n-1),sx=PX(T.P[i].s);
+  x.strokeStyle='#38bdf8';x.lineWidth=1;x.setLineDash([4,3]);x.beginPath();x.moveTo(sx,t0);x.lineTo(sx,t0+ph);x.stroke();x.setLineDash([]);
+  x.beginPath();x.arc(sx,PY(get(L[mode],i)),4,0,6.2832);x.fillStyle='#38bdf8';x.fill();
+}
 
-      const dot = d2.dot(T);
-      const accNormal = new THREE.Vector3().subVectors(d2, T.clone().multiplyScalar(dot));
-      const nLen = accNormal.length();
-
-      let N = new THREE.Vector3(0, 1, 0);
-      let B = new THREE.Vector3(0, 0, 1);
-      let kappa = 0;
-      let tau = 0;
-
-      if (nLen > 1e-5) {
-        N = accNormal.clone().normalize();
-        B.crossVectors(T, N).normalize();
-        kappa = (d1.clone().cross(d2)).length() / Math.pow(speed, 3);
-
-        const du = 0.005;
-        const cNext = evalCurve(u + du, type, paramB);
-        const spNext = cNext.d1.length();
-        const TNext = cNext.d1.clone().normalize();
-        const accNormNext = new THREE.Vector3().subVectors(cNext.d2, TNext.clone().multiplyScalar(cNext.d2.dot(TNext)));
-        const NNext = accNormNext.clone().normalize();
-        const BNext = new THREE.Vector3().crossVectors(TNext, NNext).normalize();
-
-        const dB_ds = (BNext.sub(B)).divideScalar(speed * du);
-        tau = -N.dot(dB_ds);
-      }
-      return { pos, T, N, B, kappa, tau };
-    }
-
-    // --- 實體軌道與車廂 ---
-    let trackGroup = new THREE.Group();
-    scene.add(trackGroup);
-
-    function buildRollerCoasterTrack() {
-      while(trackGroup.children.length > 0) {
-        const obj = trackGroup.children[0];
-        trackGroup.remove(obj);
-      }
-
-      const steps = 300;
-      const leftRailPts = [];
-      const rightRailPts = [];
-      const gauge = 0.45;
-
-      for (let i = 0; i <= steps; i++) {
-        const u = (i / steps) * tMax;
-        const frame = computeFrenet(u, currentCurveType, b);
-
-        const pLeft = frame.pos.clone().add(frame.N.clone().multiplyScalar(-gauge));
-        const pRight = frame.pos.clone().add(frame.N.clone().multiplyScalar(gauge));
-
-        leftRailPts.push(pLeft);
-        rightRailPts.push(pRight);
-
-        if (i % 6 === 0) {
-          const sleeperGeo = new THREE.BoxGeometry(gauge * 2.2, 0.06, 0.12);
-          const sleeperMat = new THREE.MeshStandardMaterial({ color: 0x475569 });
-          const sleeper = new THREE.Mesh(sleeperGeo, sleeperMat);
-          sleeper.position.copy(frame.pos);
-          const rotMatrix = new THREE.Matrix4().makeBasis(frame.N, frame.B, frame.T);
-          sleeper.rotation.setFromRotationMatrix(rotMatrix);
-          trackGroup.add(sleeper);
-        }
-      }
-
-      const leftCurve = new THREE.CatmullRomCurve3(leftRailPts);
-      const rightCurve = new THREE.CatmullRomCurve3(rightRailPts);
-      const railGeoL = new THREE.TubeGeometry(leftCurve, 200, 0.04, 8, false);
-      const railGeoR = new THREE.TubeGeometry(rightCurve, 200, 0.04, 8, false);
-      const railMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, metalness: 0.6, roughness: 0.3 });
-
-      trackGroup.add(new THREE.Mesh(railGeoL, railMat));
-      trackGroup.add(new THREE.Mesh(railGeoR, railMat));
-
-      update2DChart();
-    }
-
-    const carGroup = new THREE.Group();
-    const carBody = new THREE.Mesh(
-      new THREE.BoxGeometry(0.7, 0.35, 1.1),
-      new THREE.MeshStandardMaterial({ color: 0xf59e0b, metalness: 0.5, roughness: 0.2 })
-    );
-    carGroup.add(carBody);
-    scene.add(carGroup);
-
-    // 箭頭
-    const arrowLen = 1.8;
-    const arrowT = new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), arrowLen, 0xf43f5e, 0.3, 0.15);
-    const arrowN = new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), arrowLen, 0x10b981, 0.3, 0.15);
-    const arrowB = new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), arrowLen, 0x0ea5e9, 0.3, 0.15);
-    scene.add(arrowT);
-    scene.add(arrowN);
-    scene.add(arrowB);
-
-    // --- Chart.js 2D 圖表 ---
-    const ctx = document.getElementById('torsionChart').getContext('2d');
-    let chartSamples = [];
-    let tauValues = [];
-    const stepCount = 80;
-    for (let i = 0; i <= stepCount; i++) {
-      chartSamples.push(((i / stepCount) * tMax).toFixed(1));
-    }
-
-    const torsionChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: chartSamples,
-        datasets: [
-          { label: '扭率 \u03C4', data: [], borderColor: '#10b981', borderWidth: 2, pointRadius: 0, tension: 0.2 },
-          { label: '當前點', data: [], borderColor: '#f43f5e', backgroundColor: '#f43f5e', pointRadius: 5, showLine: false }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: false,
-        scales: {
-          x: { display: false },
-          y: { grid: { color: 'rgba(51, 65, 85, 0.4)' }, ticks: { color: '#94a3b8', font: { size: 10 } } }
-        },
-        plugins: { legend: { display: false } }
-      }
-    });
-
-    function update2DChart() {
-      tauValues = [];
-      for (let i = 0; i <= stepCount; i++) {
-        const u = (i / stepCount) * tMax;
-        const frame = computeFrenet(u, currentCurveType, b);
-        tauValues.push(frame.tau);
-      }
-      torsionChart.data.datasets[0].data = tauValues;
-      torsionChart.update();
-    }
-
-    // --- 第一人稱視角轉向監聽 ---
-    container.addEventListener('mousedown', (e) => {
-      if (isCockpitView && e.button === 0) {
-        isDraggingHead = true;
-        prevMouseX = e.clientX;
-        prevMouseY = e.clientY;
-      }
-    });
-
-    window.addEventListener('mousemove', (e) => {
-      if (isCockpitView && isDraggingHead) {
-        const deltaX = e.clientX - prevMouseX;
-        const deltaY = e.clientY - prevMouseY;
-        prevMouseX = e.clientX;
-        prevMouseY = e.clientY;
-
-        const sensitivity = 0.005;
-        headYaw -= deltaX * sensitivity;
-        headPitch -= deltaY * sensitivity;
-        headPitch = Math.max(-Math.PI / 2.5, Math.min(Math.PI / 2.5, headPitch));
-        updateScene();
-      }
-    });
-
-    window.addEventListener('mouseup', () => {
-      isDraggingHead = false;
-    });
-
-    container.addEventListener('dblclick', () => {
-      if (isCockpitView) {
-        headYaw = 0;
-        headPitch = 0;
-        updateScene();
-      }
-    });
-
-    document.getElementById('resetHeadBtn').addEventListener('click', () => {
-      headYaw = 0;
-      headPitch = 0;
-      updateScene();
-    });
-
-    // --- 更新場景狀態 ---
-    function updateScene() {
-      const frame = computeFrenet(t, currentCurveType, b);
-
-      carGroup.position.copy(frame.pos);
-      const carUp = frame.B.clone().negate(); // 取負方向朝上
-      const carRight = frame.N.clone();
-      const carForward = frame.T.clone();
-      const carMatrix = new THREE.Matrix4().makeBasis(carRight, carUp, carForward);
-      carGroup.rotation.setFromRotationMatrix(carMatrix);
-
-      arrowT.position.copy(frame.pos);
-      arrowT.setDirection(frame.T);
-      arrowN.position.copy(frame.pos);
-      arrowN.setDirection(frame.N);
-      arrowB.position.copy(frame.pos);
-      arrowB.setDirection(carUp);
-
-      document.getElementById('curvVal').textContent = frame.kappa.toFixed(3);
-      document.getElementById('torVal').textContent = frame.tau.toFixed(3);
-
-      const sampleIndex = Math.min(Math.floor((t / tMax) * stepCount), stepCount);
-      const currentPointData = new Array(stepCount + 1).fill(null);
-      currentPointData[sampleIndex] = frame.tau;
-      torsionChart.data.datasets[1].data = currentPointData;
-      torsionChart.update();
-
-      if (isCockpitView) {
-        const driverEye = frame.pos.clone().add(frame.B.clone().multiplyScalar(-0.45));
-        camera.position.copy(driverEye);
-
-        const forward = frame.T.clone();
-        const right = frame.N.clone().negate();
-        const up = frame.B.clone();
-
-        const lookDir = forward.clone().applyAxisAngle(up, headYaw);
-        const currentRight = right.clone().applyAxisAngle(up, headYaw);
-        lookDir.applyAxisAngle(currentRight, headPitch);
-
-        const lookTarget = driverEye.clone().add(lookDir.multiplyScalar(5));
-        camera.lookAt(lookTarget);
-        camera.up.copy(frame.B.clone().negate());
-      }
-    }
-
-    // --- UI 互動綁定 ---
-    const buttons = {
-      circle: document.getElementById('btnCircle'),
-      helix: document.getElementById('btnHelix'),
-      wave: document.getElementById('btnWave')
-    };
-
-    function selectCurve(type) {
-      currentCurveType = type;
-      Object.keys(buttons).forEach(key => {
-        const btn = buttons[key];
-        if (key === type) {
-          btn.className = "curve-btn py-2 px-1 text-xs font-bold rounded-xl bg-slate-800 text-white shadow-md border border-slate-700 transition-all text-center";
-        } else {
-          btn.className = "curve-btn py-2 px-1 text-xs font-semibold rounded-xl text-slate-400 hover:text-slate-200 transition-all text-center";
-        }
-      });
-      document.getElementById('pitchControlWrap').style.display = (type === 'helix') ? 'block' : 'none';
-      buildRollerCoasterTrack();
-      updateScene();
-    }
-
-    buttons.circle.addEventListener('click', () => selectCurve('circle'));
-    buttons.helix.addEventListener('click', () => selectCurve('helix'));
-    buttons.wave.addEventListener('click', () => selectCurve('wave'));
-
-    // 視角切換
-    const toggleCamBtn = document.getElementById('toggleCamBtn');
-    const cockpitHUD = document.getElementById('cockpitHUD');
-    const freeViewHint = document.getElementById('freeViewHint');
-
-    toggleCamBtn.addEventListener('click', () => {
-      isCockpitView = !isCockpitView;
-      if (isCockpitView) {
-        controls.enabled = false;
-        headYaw = 0;
-        headPitch = 0;
-        cockpitHUD.classList.remove('hidden');
-        freeViewHint.classList.add('hidden');
-        carGroup.visible = false;
-        toggleCamBtn.innerHTML = "<span>🔄 切換回第三人稱自由視角</span>";
-        toggleCamBtn.className = "w-full py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 active:scale-[0.98] text-slate-950 font-black rounded-2xl text-sm transition-all shadow-[0_4px_20px_rgba(245,158,11,0.3)] flex items-center justify-center gap-2";
-      } else {
-        controls.enabled = true;
-        camera.up.set(0, 1, 0);
-        camera.position.set(9, 9, 11);
-        camera.lookAt(0, 0, 0);
-        cockpitHUD.classList.add('hidden');
-        freeViewHint.classList.remove('hidden');
-        carGroup.visible = true;
-        toggleCamBtn.innerHTML = "<span>🎢 切換至雲霄飛車第一人稱視角</span>";
-        toggleCamBtn.className = "w-full py-3.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 active:scale-[0.98] text-slate-950 font-black rounded-2xl text-sm transition-all shadow-[0_4px_20px_rgba(16,185,129,0.3)] flex items-center justify-center gap-2";
-      }
-      updateScene();
-    });
-
-    // 速度控制器邏輯
-    const speedSlider = document.getElementById('speedSlider');
-    const speedVal = document.getElementById('speedVal');
-    const presetBtns = document.querySelectorAll('.speed-preset');
-
-    function applySpeed(val) {
-      speedMultiplier = parseFloat(val);
-      speedSlider.value = speedMultiplier;
-      speedVal.textContent = speedMultiplier.toFixed(1) + 'x';
-
-      presetBtns.forEach(btn => {
-        if (parseFloat(btn.dataset.speed) === speedMultiplier) {
-          btn.className = "speed-preset px-2 py-0.5 rounded-md bg-amber-500 text-slate-950 font-bold text-[10px] shadow";
-        } else {
-          btn.className = "speed-preset px-2 py-0.5 rounded-md text-[10px] text-slate-400 hover:text-white transition";
-        }
-      });
-    }
-
-    speedSlider.addEventListener('input', (e) => applySpeed(e.target.value));
-    presetBtns.forEach(btn => {
-      btn.addEventListener('click', () => applySpeed(btn.dataset.speed));
-    });
-
-    // 參數滑桿
-    const pitchSlider = document.getElementById('pitchSlider');
-    const pitchVal = document.getElementById('pitchVal');
-    pitchSlider.addEventListener('input', (e) => {
-      b = parseFloat(e.target.value);
-      pitchVal.textContent = b.toFixed(2);
-      buildRollerCoasterTrack();
-      updateScene();
-    });
-
-    const tSlider = document.getElementById('tSlider');
-    const tVal = document.getElementById('tVal');
-    tSlider.addEventListener('input', (e) => {
-      t = parseFloat(e.target.value);
-      tVal.textContent = t.toFixed(2);
-      updateScene();
-    });
-
-    // 播放按鈕
-    const playBtn = document.getElementById('playBtn');
-    playBtn.addEventListener('click', () => {
-      isPlaying = !isPlaying;
-      playBtn.innerHTML = isPlaying ? "<span>⏸ 暫停雲霄飛車</span>" : "<span>▶ 開始雲霄飛車行駛</span>";
-      playBtn.classList.toggle('bg-amber-600', isPlaying);
-      playBtn.classList.toggle('hover:bg-amber-500', isPlaying);
-      playBtn.classList.toggle('bg-indigo-600', !isPlaying);
-      playBtn.classList.toggle('hover:bg-indigo-500', !isPlaying);
-    });
-
-    window.addEventListener('resize', () => {
-      const w = container.clientWidth;
-      const h = container.clientHeight;
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-      renderer.setSize(w, h);
-    });
-
-    // 初始渲染
-    buildRollerCoasterTrack();
-    updateScene();
-
-    // 渲染循環
-    function animate() {
-      requestAnimationFrame(animate);
-
-      if (isPlaying) {
-        t += baseSpeed * speedMultiplier;
-        if (t > tMax) t = 0;
-        tSlider.value = t;
-        tVal.textContent = t.toFixed(2);
-        updateScene();
-      }
-
-      if (!isCockpitView) {
-        controls.update();
-      }
-      renderer.render(scene, camera);
-    }
-    animate();
-  </script>
+// --- UI ---
+document.querySelectorAll('#gCorner .btn').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#gCorner .btn').forEach(x=>x.classList.remove('on'));b.classList.add('on');setCorner(b.dataset.k);});
+document.querySelectorAll('#gLine .btn').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#gLine .btn').forEach(x=>x.classList.remove('on'));b.classList.add('on');mode=b.dataset.m;draw();});
+$('slider').oninput=e=>{idx=parseFloat(e.target.value);draw();};
+$('rate').onchange=e=>rate=parseFloat(e.target.value);
+$('play').onclick=()=>{playing=!playing;last=0;$('play').textContent=playing?'⏸ 暫停':'▶ 沿軌道行駛（速度依物理極限變化）';};
+window.addEventListener('resize',draw);
+const ptrs=new Map();let pinch=0;
+const rel=e=>{const r=cv.getBoundingClientRect();return[e.clientX-r.left,e.clientY-r.top];};
+cv.addEventListener('wheel',e=>{e.preventDefault();const[x,y]=rel(e);zoomAt(Math.exp(-e.deltaY*.0015),x,y);},{passive:false});
+cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,rel(e));pinch=0;});
+cv.addEventListener('pointermove',e=>{
+  if(!ptrs.has(e.pointerId))return;
+  const[x,y]=rel(e),[ox,oy]=ptrs.get(e.pointerId);ptrs.set(e.pointerId,[x,y]);
+  if(ptrs.size===1){if(follow)setFollow(false);view.px+=x-ox;view.py+=y-oy;draw();}
+  else if(ptrs.size===2){
+    const[a,b]=[...ptrs.values()],d=Math.hypot(a[0]-b[0],a[1]-b[1]);
+    if(pinch)zoomAt(d/pinch,(a[0]+b[0])/2,(a[1]+b[1])/2);
+    pinch=d;
+  }
+});
+['pointerup','pointercancel'].forEach(t=>cv.addEventListener(t,e=>{ptrs.delete(e.pointerId);pinch=0;}));
+cv.addEventListener('dblclick',resetView);
+$('zIn').onclick=()=>zoomAt(1.4,lastV.w/2,lastV.h/2);
+$('zOut').onclick=()=>zoomAt(1/1.4,lastV.w/2,lastV.h/2);
+$('zFollow').onclick=()=>{if(!follow&&view.z<3)view.z=4;setFollow(!follow);};
+$('zReset').onclick=resetView;
+function loop(now){
+  if(playing){
+    const dt=last?Math.min(.05,(now-last)/1000)*rate:0;last=now;
+    const ln=L[mode],i=Math.min(Math.floor(idx),T.P.length-2),v=ln.v[i]+(ln.v[i+1]-ln.v[i])*(idx-i);
+    idx+=v*dt/ln.seg[i];
+    if(idx>=T.P.length-1)idx=0;
+    $('slider').value=idx;draw();
+  }
+  requestAnimationFrame(loop);
+}
+setCorner('hairpin');requestAnimationFrame(loop);
+</script>
 </body>
 </html>
