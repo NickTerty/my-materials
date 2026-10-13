@@ -12,7 +12,7 @@
 <body>
   <a class="skip-link" href="#main">跳到主要內容</a>
 
-  <!-- 頂部導覽列 -->
+  <!-- Top navigation bar -->
   <header class="navbar">
     <div class="navbar-container">
       <div class="brand-section">
@@ -58,7 +58,7 @@
     <p id="last-update">Last Update: —</p>
   </footer>
 
-  <!-- PDF 預覽視窗（僅電腦版使用） -->
+  <!-- PDF preview dialog (desktop only) -->
   <dialog id="viewer" class="viewer" aria-labelledby="viewerTitle">
     <div class="viewer-bar">
       <h2 id="viewerTitle" class="viewer-title"></h2>
@@ -74,8 +74,8 @@
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <script>
-    // ===== 設定 =====
-    const VISIBLE_LIMIT = 3;   // 每門課預設顯示最新幾份，超過的較早檔案會收進「顯示較早的 N 份」
+    // ===== Settings =====
+    const VISIBLE_LIMIT = 3;   // Files shown per course by default; older ones are folded under "show N earlier"
 
     const GROUPS = [
       { key: 'ta',      container: 'ta-container',      count: 'ta-count' },
@@ -83,9 +83,9 @@
     ];
     const state = {
       data: null, courses: [], query: '', sem: 'all', semesters: [],
-      focus: null,              // 由網址 #id 指定要展開的課程
-      openState: new Map(),     // 使用者手動展開／收合的紀錄
-      expanded: new Set()       // 已展開「較早檔案」的課程
+      focus: null,              // Course to expand, set by the URL #id
+      openState: new Map(),     // Cards the user opened/closed manually
+      expanded: new Set()       // Courses whose earlier files are expanded
     };
     const $ = id => document.getElementById(id);
 
@@ -105,7 +105,7 @@
       return out + esc(text.slice(i));
     }
 
-    // 課程網址代號：JSON 有 "id" 就用它，否則由英文課名產生，例如 Calculus(I) → calculus-i
+    // Course URL id: use "id" from the JSON if present, otherwise derive it from the English name, e.g. Calculus(I) → calculus-i
     function assignIds(courses) {
       const used = new Set();
       courses.forEach(c => {
@@ -159,11 +159,11 @@
       if (isCurrent) c.files.forEach((f, i) => { if (f.url) latest = i; });
       const uploaded = c.files.filter(f => f.url).length;
 
-      // 展開狀態：搜尋中全部展開 > 使用者手動操作 > 網址指定 > 本學期預設展開
+      // Open state priority: searching (all open) > manual toggle > URL target > current semester open by default
       const defOpen = state.focus ? c._id === state.focus : isCurrent;
       const open = q ? true : (state.openState.has(c._id) ? state.openState.get(c._id) : defOpen);
 
-      // 檔案太多時收起較早的（"pin": true 的檔案永遠顯示在最上面）
+      // Fold older files when there are too many (files with "pin": true always stay on top)
       const pinned = files.filter(f => f.pin);
       const rest = files.filter(f => !f.pin);
       const hideCount = (!q && rest.length > VISIBLE_LIMIT) ? rest.length - VISIBLE_LIMIT : 0;
@@ -235,7 +235,7 @@
       }));
     }
 
-    // ===== 1. 課程連結 =====
+    // ===== 1. Course links =====
     function courseUrl(id) {
       return location.href.split('#')[0] + '#' + encodeURIComponent(id);
     }
@@ -280,7 +280,7 @@
       });
     }
 
-    // ===== 2. PDF 預覽視窗（電腦版） =====
+    // ===== 2. PDF preview dialog (desktop) =====
     const viewer = $('viewer'), frame = $('viewerFrame');
     const useViewer = () => typeof viewer.showModal === 'function'
       && matchMedia('(min-width: 768px) and (pointer: fine)').matches;
@@ -298,13 +298,13 @@
       document.documentElement.classList.remove('modal-open');
     });
     $('viewerClose').addEventListener('click', () => viewer.close());
-    viewer.addEventListener('click', e => { if (e.target === viewer) viewer.close(); });  // 點背景關閉
+    viewer.addEventListener('click', e => { if (e.target === viewer) viewer.close(); });  // Close when clicking the backdrop
 
-    // ===== 事件 =====
+    // ===== Events =====
     document.addEventListener('click', async e => {
       const copy = e.target.closest('.copy-btn');
       if (copy) {
-        e.preventDefault(); e.stopPropagation();   // 不要觸發卡片展開／收合
+        e.preventDefault(); e.stopPropagation();   // Don't toggle the card
         const ok = await copyText(courseUrl(copy.dataset.course));
         toast(ok ? '已複製課程連結' : '複製失敗，請手動複製網址');
         return;
@@ -323,7 +323,7 @@
       }
     });
 
-    // 記住使用者手動展開／收合，重新篩選時不會被重設
+    // Remember manual open/close so re-filtering doesn't reset it
     document.addEventListener('toggle', e => {
       if (e.target.matches?.('.course-card') && !state.query) state.openState.set(e.target.id, e.target.open);
     }, true);
@@ -347,7 +347,7 @@
       }
     });
 
-    // ===== 載入資料 =====
+    // ===== Load data =====
     async function loadData() {
       try {
         const res = await fetch('./src/data/data.json', { cache: 'no-cache' });

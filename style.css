@@ -1,4 +1,4 @@
-/* ========== 色彩與基本設定 ========== */
+/* ========== Colors & base ========== */
 :root {
   color-scheme: dark;
   --bg-main: #0b0f19;
@@ -83,7 +83,7 @@ kbd {
   color: var(--text-muted);
 }
 
-/* ========== 導覽列 ========== */
+/* ========== Navigation bar ========== */
 .navbar {
   position: sticky; top: 0; z-index: 50;
   background: var(--bg-header);
@@ -121,7 +121,7 @@ kbd {
   color: var(--text-main);
   padding: .5rem 2.2rem .5rem 2.2rem;
   border-radius: 10px;
-  font-size: 16px;            /* 16px 以上，iOS 才不會自動放大畫面 */
+  font-size: 16px;            /* 16px+ keeps iOS from auto-zooming on focus */
   outline: none;
   transition: border-color .15s, box-shadow .15s;
 }
@@ -137,7 +137,7 @@ kbd {
 .search-kbd { position: absolute; right: .65rem; top: 50%; transform: translateY(-50%); pointer-events: none; }
 .search-bar input:focus ~ .search-kbd { display: none; }
 
-/* ========== 主內容 ========== */
+/* ========== Main content ========== */
 .main-content {
   flex: 1;
   width: 100%; max-width: 1150px;
@@ -183,7 +183,7 @@ kbd {
   .columns-grid { grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start; }
 }
 
-/* 每欄有自己的主題色 */
+/* Each column has its own accent color */
 .column[data-type="ta"]      { --accent: var(--ta);      --accent-rgb: var(--ta-rgb); }
 .column[data-type="student"] { --accent: var(--student); --accent-rgb: var(--student-rgb); }
 
@@ -204,7 +204,7 @@ kbd {
 .column-header .en { font-size: .78rem; font-weight: 500; color: var(--text-muted); }
 .count { font-size: .8rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 
-/* ========== 課程卡片 ========== */
+/* ========== Course cards ========== */
 .course-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -249,7 +249,7 @@ kbd {
 }
 .course-card[open] .chevron { transform: rotate(-135deg) translateY(-2px); }
 
-/* ========== 檔案列表 ========== */
+/* ========== File list ========== */
 .file-list { list-style: none; padding: 0 .5rem .5rem; }
 
 .file-item {
@@ -314,7 +314,7 @@ kbd {
 
 mark { background: var(--mark-bg); color: inherit; border-radius: 3px; padding: 0 1px; }
 
-/* ========== 狀態 ========== */
+/* ========== States ========== */
 .empty, .error {
   font-size: .88rem; color: var(--text-muted);
   border: 1px dashed var(--border-strong); border-radius: var(--radius);
@@ -341,7 +341,7 @@ footer {
 }
 footer p + p { margin-top: .25rem; }
 
-/* ========== 手機 ========== */
+/* ========== Mobile ========== */
 @media (max-width: 600px) {
   .brand-section { width: 100%; justify-content: space-between; }
   .page-title { font-size: 1.05rem; }
@@ -357,7 +357,7 @@ footer p + p { margin-top: .25rem; }
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
 
-/* ========== 1. 課程連結 ========== */
+/* ========== 1. Course links ========== */
 .course-card { scroll-margin-top: 96px; }
 .course-card.is-target { animation: target-ring 2.2s ease-out; }
 @keyframes target-ring {
@@ -388,7 +388,7 @@ footer p + p { margin-top: .25rem; }
 }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
-/* ========== 2. PDF 預覽視窗 ========== */
+/* ========== 2. PDF preview dialog ========== */
 html.modal-open { overflow: hidden; }
 
 .viewer {
@@ -415,7 +415,7 @@ html.modal-open { overflow: hidden; }
 .btn-icon { font: inherit; cursor: pointer; padding: .2rem .65rem; }
 .viewer iframe { flex: 1; width: 100%; border: 0; background: #525659; }
 
-/* ========== 4. 收起較早的檔案 ========== */
+/* ========== 4. Fold earlier files ========== */
 .file-list.collapsed .is-older { display: none; }
 .more-row { list-style: none; border-top: 1px solid var(--border); padding: .2rem 0; }
 .more-btn {
