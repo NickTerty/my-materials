@@ -3,123 +3,372 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Course Materials & Notes</title>
+  <meta name="description" content="NickTerty 的助教教材與修課筆記：微積分、高等微積分、常微分方程、機率等課程講義。" />
+  <meta name="theme-color" content="#0b0f19" />
+  <title>教材與筆記資料庫 | NickTerty</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <a class="skip-link" href="#main">跳到主要內容</a>
 
   <!-- 頂部導覽列 -->
   <header class="navbar">
     <div class="navbar-container">
       <div class="brand-section">
-        <a href="https://komeiimo.vercel.app" class="back-home-link">&larr; 回個人主頁</a>
+        <a href="https://komeiimo.vercel.app" class="back-home-link">&larr; 個人主頁</a>
         <h1 class="page-title">教材與筆記資料庫</h1>
       </div>
-      <div class="search-bar">
-        <input type="text" id="searchInput" placeholder="搜尋課程、章節、關鍵字..." onkeyup="filterContent()" />
+      <div class="search-bar" role="search">
+        <label for="searchInput" class="sr-only">搜尋課程、章節、關鍵字</label>
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input type="search" id="searchInput" placeholder="搜尋課程、章節、關鍵字…" autocomplete="off" />
+        <kbd class="search-kbd" aria-hidden="true">/</kbd>
       </div>
     </div>
   </header>
 
-  <main class="main-content">
-    <div class="info-banner">
-      <span>說明：點擊「預覽」直接開啓PDF，點擊「下載」保存檔案，或直接開啟外部連結。</span>
-      <div class="legend-group">
-        <span class="legend-item"><span class="dot dot-ta"></span>Teaching Assistant</span>
-        <span class="legend-item"><span class="dot dot-student"></span>Student</span>
-      </div>
+  <main id="main" class="main-content">
+    <div class="toolbar">
+      <div class="chip-group" id="semesterChips" role="group" aria-label="依學期篩選"></div>
+      <p class="result-count" id="resultCount" aria-live="polite"></p>
     </div>
 
     <div class="columns-grid">
-      <!-- Teaching as TA -->
-      <section>
+      <section class="column" data-type="ta" aria-labelledby="ta-heading">
         <div class="column-header">
-          <h2>教材 (Teaching as TA)</h2>
-          <span class="badge-ta">Teaching Assistant Hub</span>
+          <h2 id="ta-heading">助教教材 <span class="en">Teaching as TA</span></h2>
+          <span class="count" id="ta-count"></span>
         </div>
-        <div id="ta-container"></div>
+        <div id="ta-container"><div class="skeleton"></div><div class="skeleton"></div></div>
       </section>
 
-      <!-- As Student -->
-      <section>
+      <section class="column" data-type="student" aria-labelledby="student-heading">
         <div class="column-header">
-          <h2>修課筆記 (As Student)</h2>
-          <span class="badge-student">Student Notes</span>
+          <h2 id="student-heading">修課筆記 <span class="en">As Student</span></h2>
+          <span class="count" id="student-count"></span>
         </div>
-        <div id="student-container"></div>
+        <div id="student-container"><div class="skeleton"></div><div class="skeleton"></div></div>
       </section>
     </div>
   </main>
 
   <footer>
-    <p>NickTerty | Course Materials & Notes | Hosted on Vercel</p>
-    <!-- 日期將由 JS 自動從 JSON 抓取帶入 -->
-    <p id="last-update">Last Update: Loading...</p>
+    <p>NickTerty · Course Materials &amp; Notes · Hosted on Vercel</p>
+    <p id="last-update">Last Update: —</p>
   </footer>
 
-  <!-- 自動讀取 JSON 並渲染卡片的腳本 -->
+  <!-- PDF 預覽視窗（僅電腦版使用） -->
+  <dialog id="viewer" class="viewer" aria-labelledby="viewerTitle">
+    <div class="viewer-bar">
+      <h2 id="viewerTitle" class="viewer-title"></h2>
+      <div class="viewer-actions">
+        <a id="viewerOpen" class="btn btn-ghost" target="_blank" rel="noopener">新分頁開啟 ↗</a>
+        <a id="viewerDl" class="btn" download>下載</a>
+        <button type="button" id="viewerClose" class="btn btn-icon" aria-label="關閉預覽">✕</button>
+      </div>
+    </div>
+    <iframe id="viewerFrame" title="PDF 預覽"></iframe>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
   <script>
-    async function loadData() {
-      try {
-        const response = await fetch('./src/data/data.json');
-        const data = await response.json();
+    // ===== 設定 =====
+    const VISIBLE_LIMIT = 3;   // 每門課預設顯示最新幾份，超過的較早檔案會收進「顯示較早的 N 份」
 
-        // 1. 自動更新 Footer 的 Last Update 日期
-        if (data.lastUpdate) {
-          document.getElementById('last-update').textContent = `Last Update: ${data.lastUpdate}`;
-        }
+    const GROUPS = [
+      { key: 'ta',      container: 'ta-container',      count: 'ta-count' },
+      { key: 'student', container: 'student-container', count: 'student-count' }
+    ];
+    const state = {
+      data: null, courses: [], query: '', sem: 'all', semesters: [],
+      focus: null,              // 由網址 #id 指定要展開的課程
+      openState: new Map(),     // 使用者手動展開／收合的紀錄
+      expanded: new Set()       // 已展開「較早檔案」的課程
+    };
+    const $ = id => document.getElementById(id);
 
-        // 2. 分別傳入 'ta' 與 'student' 類別渲染卡片
-        renderCards(data.ta, 'ta-container', 'ta');
-        renderCards(data.student, 'student-container', 'student');
-      } catch (err) {
-        console.error('無法讀取教材資料:', err);
+    const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+    function hl(text) {
+      text = String(text ?? '');
+      const q = state.query;
+      if (!q) return esc(text);
+      const lower = text.toLowerCase();
+      let out = '', i = 0, j;
+      while ((j = lower.indexOf(q, i)) !== -1) {
+        out += esc(text.slice(i, j)) + '<mark>' + esc(text.slice(j, j + q.length)) + '</mark>';
+        i = j + q.length;
+      }
+      return out + esc(text.slice(i));
+    }
+
+    // 課程網址代號：JSON 有 "id" 就用它，否則由英文課名產生，例如 Calculus(I) → calculus-i
+    function assignIds(courses) {
+      const used = new Set();
+      courses.forEach(c => {
+        let id = c.id || (c.subtitle || c.title || '').split('|')[0]
+          .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'course';
+        if (used.has(id)) id += '-' + String(c.status).toLowerCase();
+        used.add(id);
+        c._id = id;
+      });
+    }
+
+    function fileKind(f) {
+      if (!f.url) return 'pending';
+      if (f.type === 'link') return /^https?:/i.test(f.url) ? 'link' : 'page';
+      return 'file';
+    }
+
+    function renderFile(f, isNew, older) {
+      const kind = fileKind(f), url = esc(f.url), name = esc(f.name);
+      let actions;
+      if (kind === 'pending') {
+        actions = '<span class="pending-pill">即將上傳</span>';
+      } else if (kind === 'link') {
+        actions = `<a class="btn btn-primary" href="${url}" target="_blank" rel="noopener noreferrer" aria-label="開啟連結：${name}">開啟 ↗</a>`;
+      } else if (kind === 'page') {
+        actions = `<a class="btn btn-primary" href="${url}" target="_blank" rel="noopener" aria-label="開啟頁面：${name}">開啟</a>`;
+      } else {
+        actions = `<a class="btn btn-ghost js-preview" href="${url}" target="_blank" rel="noopener" data-title="${name}" aria-label="預覽：${name}">預覽</a>
+                   <a class="btn" href="${url}" download aria-label="下載：${name}">下載</a>`;
+      }
+      return `
+        <li class="file-item${kind === 'pending' ? ' is-pending' : ''}${older ? ' is-older' : ''}">
+          <div class="file-info">
+            <span class="tag-label">${hl(f.tag)}</span>
+            <span class="file-name">${hl(f.name)}</span>
+            ${isNew ? '<span class="new-pill">NEW</span>' : ''}
+          </div>
+          <div class="file-actions">${actions}</div>
+        </li>`;
+    }
+
+    function renderCourse(c, isCurrent) {
+      const q = state.query;
+      const head = [c.title, c.subtitle, c.status].join(' ').toLowerCase();
+      const files = (!q || head.includes(q))
+        ? c.files
+        : c.files.filter(f => `${f.tag} ${f.name}`.toLowerCase().includes(q));
+      if (q && !files.length) return null;
+
+      let latest = -1;
+      if (isCurrent) c.files.forEach((f, i) => { if (f.url) latest = i; });
+      const uploaded = c.files.filter(f => f.url).length;
+
+      // 展開狀態：搜尋中全部展開 > 使用者手動操作 > 網址指定 > 本學期預設展開
+      const defOpen = state.focus ? c._id === state.focus : isCurrent;
+      const open = q ? true : (state.openState.has(c._id) ? state.openState.get(c._id) : defOpen);
+
+      // 檔案太多時收起較早的（"pin": true 的檔案永遠顯示在最上面）
+      const pinned = files.filter(f => f.pin);
+      const rest = files.filter(f => !f.pin);
+      const hideCount = (!q && rest.length > VISIBLE_LIMIT) ? rest.length - VISIBLE_LIMIT : 0;
+      const expanded = state.expanded.has(c._id);
+      const fileHtml = [
+        ...pinned.map(f => renderFile(f, c.files.indexOf(f) === latest, false)),
+        hideCount ? `<li class="more-row"><button type="button" class="more-btn" data-course="${esc(c._id)}" aria-expanded="${expanded}">
+                       ${expanded ? '收起較早的檔案' : `顯示較早的 ${hideCount} 份`}</button></li>` : '',
+        ...rest.map((f, i) => renderFile(f, c.files.indexOf(f) === latest, i < hideCount))
+      ].join('');
+
+      const html = `
+        <details class="course-card" id="${esc(c._id)}"${open ? ' open' : ''}>
+          <summary class="card-header">
+            <div>
+              <div class="card-title-row">
+                <span class="sem-badge">${esc(c.status)}</span>
+                <h3 class="card-title">${hl(c.title)}</h3>
+              </div>
+              <p class="card-subtitle">${hl(c.subtitle)}</p>
+            </div>
+            <span class="card-meta">
+              <button type="button" class="copy-btn" data-course="${esc(c._id)}" title="複製這門課的連結" aria-label="複製「${esc(c.title)}」的連結">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1.5-1.5"/></svg>
+              </button>
+              ${uploaded} 份<span class="chevron" aria-hidden="true"></span>
+            </span>
+          </summary>
+          <ul class="file-list${hideCount && !expanded ? ' collapsed' : ''}">${fileHtml}</ul>
+        </details>`;
+      return { html, count: files.length };
+    }
+
+    function render() {
+      const current = state.semesters[0];
+      let total = 0;
+      GROUPS.forEach(g => {
+        const courses = (state.data[g.key] || []).filter(c => state.sem === 'all' || c.status === state.sem);
+        const out = courses.map(c => renderCourse(c, c.status === current)).filter(Boolean);
+        total += out.reduce((s, o) => s + o.count, 0);
+        $(g.container).innerHTML = out.length
+          ? out.map(o => o.html).join('')
+          : `<p class="empty">${state.query ? `沒有符合「${esc(state.query)}」的資料` : '這個學期沒有資料'}</p>`;
+        $(g.count).textContent = `${out.length} 門課`;
+      });
+
+      const rc = $('resultCount');
+      if (state.query) {
+        rc.textContent = `找到 ${total} 筆符合「${state.query}」的項目`;
+      } else {
+        rc.innerHTML = '「預覽」直接查看 PDF，「下載」保存檔案 · 按 <kbd>/</kbd> 快速搜尋';
       }
     }
 
-    function renderCards(courses, containerId, type) {
-      const container = document.getElementById(containerId);
-      const badgeClass = type === 'ta' ? 'badge-ta' : 'badge-student';
-
-      container.innerHTML = courses.map(course => `
-        <article class="course-card">
-          <div class="card-header">
-            <div>
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <span class="${badgeClass}" style="font-size: 10px;">${course.status}</span>
-                <span class="card-title">${course.title}</span>
-              </div>
-              <div class="card-subtitle">${course.subtitle}</div>
-            </div>
-          </div>
-          <ul class="file-list">
-            ${course.files.map(file => `
-              <li class="file-item">
-                <div class="file-info">
-                  <span class="tag-label">${file.tag}</span>
-                  <span>${file.name}</span>
-                </div>
-                <div class="file-actions">
-                  ${
-                    file.type === 'link'
-                      ? `<a href="${file.url}" target="_blank" rel="noopener noreferrer" class="btn-download">開啟連結 ↗</a>`
-                      : `<a href="${file.url}" target="_blank" class="btn-preview">預覽</a>
-                         <a href="${file.url}" download class="btn-download">下載</a>`
-                  }
-                </div>
-              </li>
-            `).join('')}
-          </ul>
-        </article>
-      `).join('');
+    function renderChips() {
+      const current = state.semesters[0];
+      const chips = [{ v: 'all', label: '全部' }].concat(
+        state.semesters.map(s => ({ v: s, label: s, note: s === current ? '本學期' : '' }))
+      );
+      const box = $('semesterChips');
+      box.innerHTML = chips.map(c =>
+        `<button type="button" class="chip" data-sem="${esc(c.v)}" aria-pressed="${c.v === state.sem}">
+           ${esc(c.label)}${c.note ? `<span class="chip-note">${c.note}</span>` : ''}
+         </button>`).join('');
+      box.querySelectorAll('.chip').forEach(b => b.addEventListener('click', () => {
+        state.sem = b.dataset.sem;
+        box.querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed', x === b));
+        render();
+      }));
     }
 
-    function filterContent() {
-      const query = document.getElementById('searchInput').value.toLowerCase().trim();
-      const cards = document.querySelectorAll('.course-card');
-      cards.forEach(card => {
-        card.style.display = card.textContent.toLowerCase().includes(query) ? '' : 'none';
+    // ===== 1. 課程連結 =====
+    function courseUrl(id) {
+      return location.href.split('#')[0] + '#' + encodeURIComponent(id);
+    }
+
+    async function copyText(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch {
+        const ta = document.createElement('textarea');
+        ta.value = text; ta.setAttribute('readonly', '');
+        ta.style.cssText = 'position:fixed;opacity:0';
+        document.body.appendChild(ta); ta.select();
+        let ok = false;
+        try { ok = document.execCommand('copy'); } catch {}
+        ta.remove();
+        return ok;
+      }
+    }
+
+    let toastTimer;
+    function toast(msg) {
+      const t = $('toast');
+      t.textContent = msg; t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
+    }
+
+    function applyHash() {
+      const id = decodeURIComponent(location.hash.slice(1));
+      if (!id || !state.courses.some(c => c._id === id)) return;
+      state.focus = id;
+      state.openState.clear();
+      state.sem = 'all'; state.query = ''; input.value = '';
+      renderChips(); render();
+      requestAnimationFrame(() => {
+        const el = $(id);
+        if (!el) return;
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        el.classList.add('is-target');
+        setTimeout(() => el.classList.remove('is-target'), 2200);
       });
+    }
+
+    // ===== 2. PDF 預覽視窗（電腦版） =====
+    const viewer = $('viewer'), frame = $('viewerFrame');
+    const useViewer = () => typeof viewer.showModal === 'function'
+      && matchMedia('(min-width: 768px) and (pointer: fine)').matches;
+
+    function openViewer(url, title) {
+      $('viewerTitle').textContent = title;
+      $('viewerOpen').href = url;
+      $('viewerDl').href = url;
+      frame.src = url;
+      viewer.showModal();
+      document.documentElement.classList.add('modal-open');
+    }
+    viewer.addEventListener('close', () => {
+      frame.src = 'about:blank';
+      document.documentElement.classList.remove('modal-open');
+    });
+    $('viewerClose').addEventListener('click', () => viewer.close());
+    viewer.addEventListener('click', e => { if (e.target === viewer) viewer.close(); });  // 點背景關閉
+
+    // ===== 事件 =====
+    document.addEventListener('click', async e => {
+      const copy = e.target.closest('.copy-btn');
+      if (copy) {
+        e.preventDefault(); e.stopPropagation();   // 不要觸發卡片展開／收合
+        const ok = await copyText(courseUrl(copy.dataset.course));
+        toast(ok ? '已複製課程連結' : '複製失敗，請手動複製網址');
+        return;
+      }
+      const more = e.target.closest('.more-btn');
+      if (more) {
+        const id = more.dataset.course;
+        state.expanded.has(id) ? state.expanded.delete(id) : state.expanded.add(id);
+        render();
+        return;
+      }
+      const pv = e.target.closest('a.js-preview');
+      if (pv && useViewer() && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+        e.preventDefault();
+        openViewer(pv.getAttribute('href'), pv.dataset.title);
+      }
+    });
+
+    // 記住使用者手動展開／收合，重新篩選時不會被重設
+    document.addEventListener('toggle', e => {
+      if (e.target.matches?.('.course-card') && !state.query) state.openState.set(e.target.id, e.target.open);
+    }, true);
+
+    window.addEventListener('hashchange', applyHash);
+
+    const input = $('searchInput');
+    input.addEventListener('input', () => {
+      state.query = input.value.trim().toLowerCase();
+      if (state.data) render();
+    });
+
+    document.addEventListener('keydown', e => {
+      if (viewer.open) return;
+      const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
+      if (e.key === '/' && !typing) { e.preventDefault(); input.focus(); }
+      if (e.key === 'Escape' && document.activeElement === input) {
+        input.value = ''; state.query = '';
+        if (state.data) render();
+        input.blur();
+      }
+    });
+
+    // ===== 載入資料 =====
+    async function loadData() {
+      try {
+        const res = await fetch('./src/data/data.json', { cache: 'no-cache' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        state.data = await res.json();
+
+        if (state.data.lastUpdate) $('last-update').textContent = `Last Update: ${state.data.lastUpdate}`;
+
+        state.courses = [...(state.data.ta || []), ...(state.data.student || [])];
+        assignIds(state.courses);
+        state.semesters = [...new Set(state.courses.map(c => c.status))].sort().reverse();
+
+        renderChips();
+        render();
+        applyHash();
+      } catch (err) {
+        console.error('無法讀取教材資料:', err);
+        GROUPS.forEach(g => {
+          $(g.container).innerHTML = `<p class="error">資料載入失敗，請重新整理頁面。<br><small>（若是直接以 file:// 開啟本機檔案，瀏覽器會阻擋讀取 JSON，請用 Live Server 或部署後瀏覽）</small></p>`;
+        });
+      }
     }
 
     loadData();
