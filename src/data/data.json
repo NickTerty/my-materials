@@ -46,7 +46,7 @@
         {
           "tag": "W6",
           "name": "Week 6 補救教學",
-          "url": "",
+          "url": "./src/materials/teaching/calculus_I/10_14.pdf",
           "type": "file"
         }
       ]
@@ -77,8 +77,8 @@
         },
         {
           "tag": "W6",
-          "name": "Section 1.6 & 2.1",
-          "url": "",
+          "name": "Section 1.6",
+          "url": "./src/materials/teaching/advanced_cal_I/10_14.pdf",
           "type": "file"
         }
       ]
