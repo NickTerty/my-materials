@@ -80,6 +80,12 @@
           "name": "Section 1.6",
           "url": "./src/materials/teaching/advanced_cal_I/10_14.pdf",
           "type": "file"
+        },
+        {
+          "tag": "W6",
+          "name": "Section 2.1",
+          "url": "./src/materials/teaching/advanced_cal_I/10_15.pdf",
+          "type": "file"
         }
       ]
     }
