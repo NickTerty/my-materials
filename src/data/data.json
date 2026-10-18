@@ -1,5 +1,5 @@
 {
-  "lastUpdate": "2026.10.13",
+  "lastUpdate": "2026.10.18",
   "ta": [
     {
       "title": "微積分(一)",
@@ -47,6 +47,12 @@
           "tag": "W6",
           "name": "Week 6 補救教學",
           "url": "./src/materials/teaching/calculus_I/10_14.pdf",
+          "type": "file"
+        },
+        {
+          "tag": "W7",
+          "name": "Week 7 補救教學",
+          "url": "",
           "type": "file"
         }
       ]
