@@ -1,5 +1,5 @@
 {
-  "lastUpdate": "2026.10.21",
+  "lastUpdate": "2026.10.24",
   "ta": [
     {
       "title": "微積分(一)",
@@ -54,6 +54,12 @@
           "name": "Week 7 補救教學",
           "url": "./src/materials/teaching/calculus_I/10_21.pdf",
           "type": "file"
+        },
+        {
+          "tag": "W8",
+          "name": "Week 8 補救教學",
+          "url": "",
+          "type": "file"
         }
       ]
     },
@@ -91,6 +97,18 @@
           "tag": "W6",
           "name": "Section 2.1",
           "url": "./src/materials/teaching/advanced_cal_I/10_15.pdf",
+          "type": "file"
+        },
+        {
+          "tag": "W8",
+          "name": "Section 2.3 ~ 2.5 Handout",
+          "url": "./src/materials/teaching/advanced_cal_I/Section_2.4_AdvCalc_Cauchy_limsup.pdf",
+          "type": "file"
+        },
+        {
+          "tag": "W8",
+          "name": "Section 3.1 ~ 3.2 Handout",
+          "url": "./src/materials/teaching/advanced_cal_I/Section_3.1_3.2_AdvCalc_Limits_of_Functions.pdf",
           "type": "file"
         }
       ]
