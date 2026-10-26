@@ -110,6 +110,12 @@
           "name": "Section 3.1 ~ 3.2 Handout",
           "url": "./src/materials/teaching/advanced_cal_I/Section_3.1_3.2_AdvCalc_Limits_of_Functions.pdf",
           "type": "file"
+        },
+        {
+          "tag": "W8",
+          "name": "Section 3.3 ~ 3.4 Handout",
+          "url": "./src/materials/teaching/advanced_cal_I/Section_3.3_3.4_AdvCalc_Continuity.pdf",
+          "type": "file"
         }
       ]
     }
@@ -145,6 +151,12 @@
           "tag": "Notes",
           "name": "Chapter 2(V2)",
           "url": "./src/materials/course/ode/ODE_chap2(v2).pdf",
+          "type": "file"
+        },
+        {
+          "tag": "Notes",
+          "name": "Chapter 4",
+          "url": "",
           "type": "file"
         }
       ]
