@@ -1,5 +1,5 @@
 {
-  "lastUpdate": "2026.10.24",
+  "lastUpdate": "2026.10.28",
   "ta": [
     {
       "title": "微積分(一)",
@@ -57,8 +57,20 @@
         },
         {
           "tag": "W8",
+          "name": "Section 2.4 ~ 2.6 Handout",
+          "url": "./src/materials/teaching/calculus_I/2.4-2.6.pdf",
+          "type": "file"
+        },
+        {
+          "tag": "W8",
+          "name": "Section 2.7 ~ 2.8 Handout",
+          "url": "./src/materials/teaching/calculus_I/2.7-2.8.pdf",
+          "type": "file"
+        },
+        {
+          "tag": "W8",
           "name": "Week 8 補救教學",
-          "url": "",
+          "url": "./src/materials/teaching/calculus_I/10_28.pdf",
           "type": "file"
         }
       ]
@@ -115,6 +127,12 @@
           "tag": "W8",
           "name": "Section 3.3 ~ 3.4 Handout",
           "url": "./src/materials/teaching/advanced_cal_I/Section_3.3_3.4_AdvCalc_Continuity.pdf",
+          "type": "file"
+        },
+        {
+          "tag": "W8",
+          "name": "Section 2.4 ~ 3.3 Exercise",
+          "url": "",
           "type": "file"
         }
       ]
