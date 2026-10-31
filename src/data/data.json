@@ -58,19 +58,37 @@
         {
           "tag": "W8",
           "name": "Section 2.4 ~ 2.6 Handout",
-          "url": "./src/materials/teaching/calculus_I/2.4-2.6.pdf",
+          "url": "./src/materials/teaching/calculus_I/Week8/2.4-2.6.pdf",
           "type": "file"
         },
         {
           "tag": "W8",
           "name": "Section 2.7 ~ 2.8 Handout",
-          "url": "./src/materials/teaching/calculus_I/2.7-2.8.pdf",
+          "url": "./src/materials/teaching/calculus_I/Week8/2.7-2.8.pdf",
           "type": "file"
         },
         {
           "tag": "W8",
           "name": "Week 8 補救教學",
           "url": "./src/materials/teaching/calculus_I/10_28.pdf",
+          "type": "file"
+        },
+        {
+          "tag": "W9",
+          "name": "Section 3.1 Handout",
+          "url": "",
+          "type": "file"
+        },
+        {
+          "tag": "W9",
+          "name": "Midterm Review",
+          "url": "",
+          "type": "file"
+        },
+        {
+          "tag": "W9",
+          "name": "Week 9 補救教學",
+          "url": "",
           "type": "file"
         }
       ]
@@ -132,7 +150,7 @@
         {
           "tag": "W8",
           "name": "Section 2.4 ~ 3.3 Exercise",
-          "url": "",
+          "url": "./src/materials/teaching/calculus_I/10_28.pdf",
           "type": "file"
         }
       ]
