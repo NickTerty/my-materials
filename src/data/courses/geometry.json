@@ -1,0 +1,10 @@
+{
+  "title": "幾何學",
+  "subtitle": "Geometry | Fall 2026 | 應數四",
+  "status": "115-1",
+  "updated": "2026.10.21",
+  "base": "./src/materials/course/geometry/",
+  "files": [
+    { "tag": "Project", "name": "AI Project", "url": "proj_1/index.html" }
+  ]
+}

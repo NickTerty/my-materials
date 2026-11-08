@@ -348,15 +348,52 @@
     });
 
     // ===== Load data =====
+    // src/data/index.json lists course ids per group (order = display order);
+    // each course lives in src/data/courses/<id>.json, and its id doubles as the URL #id.
+    const DATA_DIR = './src/data/';
+
+    async function getJSON(path) {
+      const res = await fetch(DATA_DIR + path, { cache: 'no-cache' });
+      if (!res.ok) throw new Error(`${path}: HTTP ${res.status}`);
+      return res.json();
+    }
+
+    // Relative file URLs are resolved against the course's "base";
+    // "type" defaults to link for http(s) / .html, otherwise file.
+    function normalizeCourse(c, id) {
+      c.id = c.id || id;
+      const base = c.base || '';
+      c.files = (c.files || []).map(f => {
+        let url = f.url || '';
+        if (url && base && !/^(https?:|\/|\.\.?\/|#)/i.test(url)) url = base + url;
+        const type = f.type || (/^https?:|\.html?$/i.test(url) ? 'link' : 'file');
+        return { ...f, url, type };
+      });
+      return c;
+    }
+
+    // "2026.11.4" → comparable number
+    const dateKey = s => String(s || '').split('.').reduce((n, p) => n * 100 + (parseInt(p, 10) || 0), 0);
+
     async function loadData() {
       try {
-        const res = await fetch('./src/data/data.json', { cache: 'no-cache' });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        state.data = await res.json();
+        const index = await getJSON('index.json');
+        state.data = {};
+        await Promise.all(GROUPS.map(async g => {
+          const results = await Promise.all((index[g.key] || []).map(id =>
+            getJSON(`courses/${id}.json`)
+              .then(c => normalizeCourse(c, id))
+              .catch(err => { console.error('無法讀取課程:', err); return null; })));
+          state.data[g.key] = results.filter(Boolean);
+        }));
 
-        if (state.data.lastUpdate) $('last-update').textContent = `Last Update: ${state.data.lastUpdate}`;
+        state.courses = [...state.data.ta, ...state.data.student];
+        if (!state.courses.length) throw new Error('沒有任何課程資料');
 
-        state.courses = [...(state.data.ta || []), ...(state.data.student || [])];
+        const latest = state.courses.map(c => c.updated).filter(Boolean)
+          .sort((a, b) => dateKey(b) - dateKey(a))[0];
+        if (latest) $('last-update').textContent = `Last Update: ${latest}`;
+
         assignIds(state.courses);
         state.semesters = [...new Set(state.courses.map(c => c.status))].sort().reverse();
 

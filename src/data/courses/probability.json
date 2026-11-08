@@ -1,0 +1,12 @@
+{
+  "title": "機率",
+  "subtitle": "Probability | Spring 2026 | 資工二",
+  "status": "114-2",
+  "updated": "2026.9.13",
+  "base": "./src/materials/course/prob/",
+  "files": [
+    { "tag": "Notes", "name": "Chapter 1~4", "url": "Probability_Lecture_Ch1_4.pdf" },
+    { "tag": "Notes", "name": "Chapter 5", "url": "Probability_Lecture_Ch5.pdf" },
+    { "tag": "Notes", "name": "Chapter 6", "url": "Probability_Lecture_Ch6.pdf" }
+  ]
+}

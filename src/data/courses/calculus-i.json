@@ -1,0 +1,24 @@
+{
+  "title": "微積分(一)",
+  "subtitle": "Calculus(I) | Fall 2026 | 應數一",
+  "status": "115-1",
+  "updated": "2026.11.4",
+  "base": "./src/materials/teaching/calculus_I/",
+  "files": [
+    { "tag": "Link", "name": "Desmos", "url": "https://www.desmos.com/calculator?lang=zh-TW" },
+    { "tag": "W2",   "name": "Week 2 補救教學", "url": "9_16.pdf" },
+    { "tag": "W3",   "name": "Week 3 補救教學", "url": "9_23.pdf" },
+    { "tag": "W3-2", "name": "1.2 第10題繪圖結果", "url": "https://www.desmos.com/calculator/k7jjdgnomn" },
+    { "tag": "W4",   "name": "Week 4 補救教學", "url": "9_30.pdf" },
+    { "tag": "W5",   "name": "Week 5 補救教學", "url": "10_7.pdf" },
+    { "tag": "W6",   "name": "Week 6 補救教學", "url": "10_14.pdf" },
+    { "tag": "W7",   "name": "Week 7 補救教學", "url": "10_21.pdf" },
+    { "tag": "W8",   "name": "Section 2.4 ~ 2.6 Handout", "url": "Week8/2.4-2.6.pdf" },
+    { "tag": "W8",   "name": "Section 2.7 ~ 2.8 Handout", "url": "Week8/2.7-2.8.pdf" },
+    { "tag": "W8",   "name": "Week 8 補救教學", "url": "10_28.pdf" },
+    { "tag": "W9",   "name": "Section 3.1 Handout", "url": "Week9/ch3_1.pdf" },
+    { "tag": "W9",   "name": "Midterm Review", "url": "Week9/midterm_review.pdf" },
+    { "tag": "W9",   "name": "Week 9 補救教學", "url": "Week9/11_4.pdf" },
+    { "tag": "W9",   "name": "2.7 第31題", "url": "Week9/2_7_31.pdf" }
+  ]
+}

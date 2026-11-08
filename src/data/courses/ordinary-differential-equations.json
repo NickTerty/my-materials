@@ -1,0 +1,12 @@
+{
+  "title": "常微分方程",
+  "subtitle": "Ordinary Differential Equations | Fall 2026 | 資工二",
+  "status": "115-1",
+  "updated": "2026.11.8",
+  "base": "./src/materials/course/ode/",
+  "files": [
+    { "tag": "Notes", "name": "Chapter 1", "url": "ODE_chap1.pdf" },
+    { "tag": "Notes", "name": "Chapter 2(V2)", "url": "ODE_chap2(v2).pdf" },
+    { "tag": "Notes", "name": "Chapter 4", "url": "ODE_chap4.pdf" }
+  ]
+}
